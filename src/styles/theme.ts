@@ -1,33 +1,42 @@
 export const theme = {
   colors: {
-    background: "#0D1117",
-    surface: "#161B22",
-    surfaceLight: "#21262D",
-    surfaceHighlight: "#30363D",
-    border: "#30363D",
-    borderLight: "#484F58",
-    primary: "#238636",
-    primaryHover: "#2EA043",
-    primaryLight: "#23863626",
-    secondary: "#1F6FEB",
-    secondaryHover: "#388BFD",
-    danger: "#DA3633",
-    dangerLight: "#F8514926",
-    warning: "#D29922",
-    warningLight: "#E3B34126",
-    success: "#238636",
-    successLight: "#3FB95026",
+    background: "#F9F9F9",
+    surface: "#FFFFFF",
+    surfaceLight: "#F2F2F2",
+    surfaceHighlight: "#EAEAEA",
+
+    border: "#E0E0E0",
+    borderLight: "#D0D0D0",
+
+    primary: "#F65FA7",
+    primaryHover: "#E94B96",
+    primaryLight: "#F65FA726",
+
+    secondary: "#292826",
+    secondaryHover: "#41403D",
+
+    danger: "#D93636",
+    dangerLight: "#D9363626",
+
+    warning: "#D99520",
+    warningLight: "#D9952026",
+
+    success: "#268653",
+    successLight: "#26865326",
+
     text: {
-      title: "#F0F6FC",
-      body: "#C9D1D9",
-      muted: "#8B949E",
-      light: "#FFFFFF",
+      title: "#292826",
+      body: "#292826",
+      muted: "#777674",
+      light: "#F9F9F9",
     },
   },
+
   fonts: {
     title: "'Newsreader', serif",
     body: "'DM Sans', sans-serif",
   },
+
   fontSizes: {
     xs: "0.75rem",
     sm: "0.875rem",
@@ -38,6 +47,7 @@ export const theme = {
     "3xl": "1.875rem",
     "4xl": "2.25rem",
   },
+
   fontWeights: {
     regular: 400,
     medium: 500,
@@ -45,6 +55,7 @@ export const theme = {
     bold: 700,
     extrabold: 800,
   },
+
   radius: {
     sm: "4px",
     md: "8px",
