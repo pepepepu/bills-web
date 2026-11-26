@@ -95,7 +95,7 @@ const InputContainer = styled.div`
 
 const Input = styled.input`
   width: 100%;
-  color: ${({ theme }) => theme.colors.text.light};
+  color: ${({ theme }) => theme.colors.text.body};
   font-size: ${({ theme }) => theme.fontSizes.sm};
 
   &::placeholder {

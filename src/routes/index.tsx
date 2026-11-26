@@ -1,6 +1,16 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { Hero, Home, Login, Register } from "../pages";
+import {
+  Agenda,
+  Bills,
+  Debts,
+  Hero,
+  Home,
+  Incomes,
+  Login,
+  Register,
+  Supplies,
+} from "../pages";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -9,8 +19,17 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <Navigate to="/" replace /> : <>{children}</>;
+  return isAuthenticated ? <Navigate to="/home" replace /> : <>{children}</>;
 }
+
+const privatePages = [
+  { path: "/home", element: <Home /> },
+  { path: "/entradas", element: <Incomes /> },
+  { path: "/contas", element: <Bills /> },
+  { path: "/dividas", element: <Debts /> },
+  { path: "/agenda", element: <Agenda /> },
+  { path: "/compras", element: <Supplies /> },
+];
 
 export function AppRoutes() {
   return (
@@ -40,14 +59,13 @@ export function AppRoutes() {
             </PublicOnlyRoute>
           }
         />
-        <Route
-          path="/home"
-          element={
-            <PrivateRoute>
-              <Home />
-            </PrivateRoute>
-          }
-        />
+        {privatePages.map((p) => (
+          <Route
+            key={p.path}
+            path={p.path}
+            element={<PrivateRoute>{p.element}</PrivateRoute>}
+          />
+        ))}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

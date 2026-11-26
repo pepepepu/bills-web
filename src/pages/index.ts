@@ -2,3 +2,8 @@ export { default as Login } from "./Login";
 export { default as Register } from "./Register";
 export { default as Hero } from "./Hero";
 export { default as Home } from "./Home";
+export { default as Incomes } from "./Incomes";
+export { default as Bills } from "./Bills";
+export { default as Debts } from "./Debts";
+export { default as Agenda } from "./Agenda";
+export { default as Supplies } from "./Supplies";
