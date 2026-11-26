@@ -9,7 +9,7 @@ export const SHEET_EXIT_MS = 280;
 export function useSheetState<T>() {
   const [value, setValue] = useState<T | null>(null);
   const [closing, setClosing] = useState(false);
-  const timer = useRef<number>();
+  const timer = useRef<number | undefined>(undefined);
 
   const set = useCallback((next: T | null) => {
     window.clearTimeout(timer.current);
