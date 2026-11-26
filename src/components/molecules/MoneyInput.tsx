@@ -1,4 +1,4 @@
-import { useTheme } from "styled-components";
+import { CurrencyCircleDollar } from "@phosphor-icons/react";
 import { Input } from "../atoms";
 
 interface MoneyInputProps {
@@ -6,29 +6,34 @@ interface MoneyInputProps {
   onChange: (masked: string) => void;
   autoFocus?: boolean;
   id?: string;
+  required?: boolean;
+  placeholder?: string;
 }
 
-/** Input atom com máscara "money" no visual dos formulários. */
-const MoneyInput = ({ value, onChange, autoFocus, id }: MoneyInputProps) => {
-  const theme = useTheme();
-  return (
-    <Input
-      id={id}
-      mask="money"
-      inputMode="numeric"
-      placeholder="R$ 0,00"
-      value={value}
-      autoFocus={autoFocus}
-      onChange={(e) => onChange(e.target.value)}
-      height={46}
-      fontSize="1rem"
-      backgroundColor={theme.colors.surface}
-      border={`1px solid ${theme.colors.border}`}
-      onFocusBorderColor={theme.colors.primary}
-      textColor={theme.colors.text.body}
-      placeholderColor={theme.colors.text.muted}
-    />
-  );
-};
+/**
+ * Campo de dinheiro padrão: digita só números e formata em reais com
+ * vírgula nos centavos e ponto nos milhares ("R$ 1.234,56").
+ */
+const MoneyInput = ({
+  value,
+  onChange,
+  autoFocus,
+  id,
+  required,
+  placeholder = "R$ 0,00",
+}: MoneyInputProps) => (
+  <Input
+    id={id}
+    mask="money"
+    inputMode="numeric"
+    placeholder={placeholder}
+    value={value}
+    autoFocus={autoFocus}
+    required={required}
+    withIcon
+    icon={<CurrencyCircleDollar />}
+    onChange={(e) => onChange(e.target.value)}
+  />
+);
 
 export default MoneyInput;

@@ -1,5 +1,9 @@
-import styled, { css } from "styled-components";
+import type React from "react";
+import styled, { css, type DefaultTheme } from "styled-components";
 import { fadeUp, pop, shimmer } from "../../styles/animations";
+import { fieldFocus, fieldPadding, fieldSurface } from "../../styles/field";
+import { glass } from "../../styles/glass";
+import { squircle, squircleMask } from "../../styles/squircle";
 
 /** Peças visuais compartilhadas pelas telas, todas a partir do theme.ts. */
 
@@ -16,9 +20,8 @@ const pressable = css`
 `;
 
 export const Card = styled.section`
-  background-color: ${({ theme }) => theme.colors.surface};
-  border-radius: ${({ theme }) => theme.radius.xl};
-  box-shadow: ${({ theme }) => theme.shadows.card};
+  ${glass}
+  ${squircle(22)}
   padding: 1.1rem 1.15rem;
   display: flex;
   flex-direction: column;
@@ -30,6 +33,87 @@ export const SectionTitle = styled.h2`
   font-weight: ${({ theme }) => theme.fontWeights.bold};
   letter-spacing: -0.02em;
 `;
+
+export type Tone =
+  | "success"
+  | "warning"
+  | "danger"
+  | "primary"
+  | "neutral"
+  | "info"
+  | "indigo"
+  | "purple"
+  | "teal";
+
+/** Cor de fundo e do ícone de cada tom. */
+export const toneColors = (
+  theme: DefaultTheme,
+  tone: Tone,
+) =>
+  ({
+    success: [theme.colors.successLight, theme.colors.successText],
+    warning: [theme.colors.warningLight, "#C93400"],
+    danger: [theme.colors.dangerLight, "#D70015"],
+    primary: [theme.colors.primaryLight, theme.colors.primaryHover],
+    info: [theme.colors.infoLight, theme.colors.info],
+    indigo: [theme.colors.indigoLight, theme.colors.indigo],
+    purple: [theme.colors.purpleLight, theme.colors.purple],
+    teal: [theme.colors.tealLight, "#0E8FA6"],
+    neutral: [theme.colors.fill, theme.colors.text.secondary],
+  })[tone];
+
+/** Quadradinho squircle com ícone colorido (títulos, atalhos, estados vazios). */
+export const IconTile = styled.span<{ $tone?: Tone; $size?: number }>`
+  ${squircleMask}
+  width: ${({ $size = 30 }) => $size}px;
+  height: ${({ $size = 30 }) => $size}px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: ${({ $size = 30 }) => Math.round($size * 0.56)}px;
+  ${({ theme, $tone = "primary" }) => {
+    const [bg, fg] = toneColors(theme, $tone);
+    return css`
+      background: ${bg};
+      color: ${fg};
+    `;
+  }}
+`;
+
+const CardTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+
+  h2 {
+    flex: 1;
+    min-width: 0;
+    font-size: 1.1rem;
+    font-weight: ${({ theme }) => theme.fontWeights.bold};
+    letter-spacing: -0.02em;
+  }
+`;
+
+/** Título de card com ícone (e ação opcional à direita). */
+export const CardTitle = ({
+  icon,
+  tone = "primary",
+  children,
+  action,
+}: {
+  icon: React.ReactNode;
+  tone?: Tone;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) => (
+  <CardTitleRow>
+    <IconTile $tone={tone}>{icon}</IconTile>
+    <h2>{children}</h2>
+    {action}
+  </CardTitleRow>
+);
 
 export const Muted = styled.span`
   font-size: ${({ theme }) => theme.fontSizes.sm};
@@ -132,9 +216,11 @@ export const IconButton = styled.button`
   &:hover {
     background: ${({ theme }) => theme.colors.fillStrong};
   }
-`;
 
-type Tone = "success" | "warning" | "danger" | "primary" | "neutral" | "info";
+  svg {
+    font-size: 1.15rem;
+  }
+`;
 
 export const Badge = styled.span<{ $tone?: Tone }>`
   display: inline-flex;
@@ -149,15 +235,7 @@ export const Badge = styled.span<{ $tone?: Tone }>`
   flex-shrink: 0;
 
   ${({ theme, $tone = "neutral" }) => {
-    const map = {
-      success: [theme.colors.successLight, theme.colors.successText],
-      warning: [theme.colors.warningLight, "#C93400"],
-      danger: [theme.colors.dangerLight, "#D70015"],
-      primary: [theme.colors.primaryLight, theme.colors.primaryHover],
-      info: [theme.colors.infoLight, theme.colors.info],
-      neutral: [theme.colors.fill, theme.colors.text.secondary],
-    } as const;
-    const [bg, fg] = map[$tone];
+    const [bg, fg] = toneColors(theme, $tone);
     return css`
       background: ${bg};
       color: ${fg};
@@ -172,15 +250,17 @@ export const Chips = styled.div`
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   padding: 3px;
-  border-radius: ${({ theme }) => theme.radius.md};
+  ${squircle(12)}
   background: ${({ theme }) => theme.colors.fill};
+  backdrop-filter: ${({ theme }) => theme.blur.card};
+  -webkit-backdrop-filter: ${({ theme }) => theme.blur.card};
 `;
 
 export const Chip = styled.button<{ $active: boolean }>`
   position: relative;
   z-index: 1;
   padding: 0.45rem 0.75rem;
-  border-radius: 8px;
+  ${squircle(9)}
   font-size: ${({ theme }) => theme.fontSizes.sm};
   font-weight: ${({ theme, $active }) =>
     $active ? theme.fontWeights.semibold : theme.fontWeights.medium};
@@ -198,27 +278,71 @@ export const Chip = styled.button<{ $active: boolean }>`
 export const ErrorBanner = styled.div`
   padding: 0.8rem 1rem;
   background-color: ${({ theme }) => theme.colors.dangerLight};
-  border-radius: ${({ theme }) => theme.radius.lg};
+  ${squircle(14)}
   color: #d70015;
   font-size: ${({ theme }) => theme.fontSizes.sm};
   font-weight: ${({ theme }) => theme.fontWeights.medium};
 `;
 
 export const InfoBanner = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
   padding: 0.8rem 1rem;
   background-color: ${({ theme }) => theme.colors.infoLight};
-  border-radius: ${({ theme }) => theme.radius.lg};
+  ${squircle(14)}
+
+  svg {
+    font-size: 1.15rem;
+    color: ${({ theme }) => theme.colors.info};
+    margin-top: 0.05rem;
+  }
   color: ${({ theme }) => theme.colors.text.secondary};
   font-size: ${({ theme }) => theme.fontSizes.sm};
 `;
 
-export const EmptyState = styled.div`
-  padding: 2rem 1rem;
+const EmptyBox = styled.div`
+  padding: 1.6rem 1rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
   text-align: center;
   color: ${({ theme }) => theme.colors.text.muted};
   font-size: ${({ theme }) => theme.fontSizes.sm};
   animation: ${fadeUp} 0.4s ${({ theme }) => theme.motion.spring} both;
+
+  strong {
+    color: ${({ theme }) => theme.colors.text.body};
+    font-size: ${({ theme }) => theme.fontSizes.md};
+    font-weight: ${({ theme }) => theme.fontWeights.semibold};
+    margin-top: 0.35rem;
+  }
 `;
+
+/** Estado vazio com ícone, título, dica e ação opcional. */
+export const EmptyState = ({
+  icon,
+  tone = "neutral",
+  title,
+  children,
+  action,
+}: {
+  icon: React.ReactNode;
+  tone?: Tone;
+  title: string;
+  children?: React.ReactNode;
+  action?: React.ReactNode;
+}) => (
+  <EmptyBox>
+    <IconTile $tone={tone} $size={56}>
+      {icon}
+    </IconTile>
+    <strong>{title}</strong>
+    {children && <span>{children}</span>}
+    {action && <div style={{ marginTop: "0.6rem" }}>{action}</div>}
+  </EmptyBox>
+);
 
 export const List = styled.ul`
   display: flex;
@@ -323,22 +447,49 @@ export const TotalsGrid = styled.div`
 export const Stat = styled.div<{ $highlight?: boolean }>`
   position: relative;
   overflow: hidden;
-  background: ${({ theme, $highlight }) =>
-    $highlight ? theme.colors.primaryGradient : theme.colors.surface};
-  color: ${({ theme, $highlight }) =>
-    $highlight ? theme.colors.text.light : theme.colors.text.body};
-  box-shadow: ${({ theme, $highlight }) =>
-    $highlight ? theme.shadows.button : theme.shadows.card};
-  border-radius: ${({ theme }) => theme.radius.xl};
+  ${({ $highlight }) =>
+    $highlight
+      ? css`
+          background: ${({ theme }) => theme.colors.primaryGradient};
+          color: ${({ theme }) => theme.colors.text.light};
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.35),
+            ${({ theme }) => theme.shadows.button};
+
+          /* brilho de vidro por cima do gradiente */
+          &::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+              160deg,
+              rgba(255, 255, 255, 0.32) 0%,
+              rgba(255, 255, 255, 0) 45%
+            );
+            pointer-events: none;
+          }
+        `
+      : css`
+          ${glass}
+          color: ${({ theme }) => theme.colors.text.body};
+        `}
+  ${squircle(20)}
   padding: 0.95rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.3rem;
 
   small {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
     font-size: ${({ theme }) => theme.fontSizes.xs};
-    font-weight: ${({ theme }) => theme.fontWeights.medium};
-    opacity: ${({ $highlight }) => ($highlight ? 0.9 : 0.6)};
+    font-weight: ${({ theme }) => theme.fontWeights.semibold};
+    opacity: ${({ $highlight }) => ($highlight ? 0.92 : 0.62)};
+
+    svg {
+      font-size: 0.95rem;
+    }
   }
 
   strong {
@@ -359,7 +510,7 @@ export const Skeleton = styled.span<{
   display: block;
   width: ${({ $w }) => $w || "100%"};
   height: ${({ $h }) => $h || "0.9rem"};
-  border-radius: ${({ $round }) => ($round ? "9999px" : "6px")};
+  border-radius: ${({ $round }) => ($round ? "9999px" : "7px")};
   background: linear-gradient(
     90deg,
     rgba(118, 118, 128, 0.1) 0%,
@@ -391,28 +542,29 @@ export const Field = styled.label`
 `;
 
 export const fieldBox = css`
-  width: 100%;
-  min-height: 46px;
-  background-color: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.md};
-  padding: 0.7rem 0.9rem;
-  font-size: ${({ theme }) => theme.fontSizes.md};
-  font-weight: ${({ theme }) => theme.fontWeights.regular};
-  color: ${({ theme }) => theme.colors.text.body};
-  -webkit-text-fill-color: ${({ theme }) => theme.colors.text.body};
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  ${fieldSurface}
+  padding: ${fieldPadding};
+  outline: none;
 
   &:focus {
-    border-color: ${({ theme }) => theme.colors.primary};
-    box-shadow: 0 0 0 4px ${({ theme }) => theme.colors.primaryLight};
+    ${fieldFocus}
   }
 `;
 
 export const TextInput = styled.input`
   ${fieldBox}
+
+  /* data no iOS: alinhada à esquerda e com a mesma altura */
+  &[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+  &::-webkit-date-and-time-value {
+    text-align: left;
+  }
 `;
 
 export const Select = styled.select`
@@ -429,13 +581,17 @@ export const Segmented = styled.div`
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   padding: 3px;
-  border-radius: ${({ theme }) => theme.radius.md};
+  ${squircle(12)}
   background: ${({ theme }) => theme.colors.fill};
 `;
 
 export const SegmentButton = styled.button<{ $active: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   padding: 0.55rem 0.5rem;
-  border-radius: 8px;
+  ${squircle(9)}
   background-color: ${({ $active, theme }) =>
     $active ? theme.colors.surface : "transparent"};
   box-shadow: ${({ $active }) =>

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
 import styled, { css } from "styled-components";
-import { PiXBold } from "react-icons/pi";
+import { X } from "@phosphor-icons/react";
 import { media } from "../../styles/medias";
 import {
   fadeIn,
@@ -12,13 +12,14 @@ import {
   sheetOut,
 } from "../../styles/animations";
 import { IconButton } from "./ui";
+import { squircle } from "../../styles/squircle";
 
 const Backdrop = styled.div<{ $closing: boolean }>`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.32);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  background: rgba(20, 20, 30, 0.22);
+  backdrop-filter: ${({ theme }) => theme.blur.backdrop};
+  -webkit-backdrop-filter: ${({ theme }) => theme.blur.backdrop};
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -37,13 +38,19 @@ const Panel = styled.div<{ $closing: boolean }>`
   max-height: 92dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: ${({ theme }) => theme.colors.background};
-  border-radius: 22px 22px 0 0;
+  background: ${({ theme }) => theme.colors.glassSheet};
+  backdrop-filter: saturate(180%) blur(40px);
+  -webkit-backdrop-filter: saturate(180%) blur(40px);
+  border: 0.5px solid ${({ theme }) => theme.colors.glassEdge};
+  border-bottom: none;
+  border-radius: 28px 28px 0 0;
   padding: 0.5rem 1.25rem calc(1.75rem + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
-  box-shadow: ${({ theme }) => theme.shadows.float};
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    ${({ theme }) => theme.shadows.float};
 
   ${({ $closing, theme }) =>
     $closing
@@ -55,7 +62,8 @@ const Panel = styled.div<{ $closing: boolean }>`
         `}
 
   ${media.tabletAndUp} {
-    border-radius: 22px;
+    ${squircle(28)}
+    border-bottom: 0.5px solid ${({ theme }) => theme.colors.glassEdge};
     padding-bottom: 1.75rem;
     ${({ $closing, theme }) =>
       $closing
@@ -118,7 +126,7 @@ const Sheet = ({ title, onClose, closing = false, children }: SheetProps) => {
         <Head>
           <h2>{title}</h2>
           <IconButton type="button" onClick={onClose} aria-label="Fechar">
-            <PiXBold />
+            <X weight="bold" />
           </IconButton>
         </Head>
         {children}

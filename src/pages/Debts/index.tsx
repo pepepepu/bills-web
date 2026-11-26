@@ -2,17 +2,24 @@ import { useState } from "react";
 import { useSheetState } from "../../hooks/useSheetState";
 import { useToast } from "../../hooks/useToast";
 import {
-  PiArrowBendUpRightBold,
-  PiCalendarPlusBold,
-  PiCheckBold,
-  PiPlusBold,
-  PiStackPlusBold,
-} from "react-icons/pi";
+  ArrowBendUpRight,
+  CalendarPlus,
+  Check,
+  Clock,
+  HandCoins,
+  LockSimple,
+  Plus,
+  StackPlus,
+  Trash,
+  Warning,
+} from "@phosphor-icons/react";
+import { useCreateParam } from "../../hooks/useCreateParam";
 import {
   AppLayout,
   Amount,
   Badge,
   Card,
+  CardTitle,
   CheckButton,
   Chip,
   Chips,
@@ -22,9 +29,9 @@ import {
   Form,
   ItemMain,
   ItemTitle,
-  ListSkeleton,
+  InfoBanner,
   List,
-  ListItem,
+  Loading,
   MoneyInput,
   Muted,
   PillButton,
@@ -32,13 +39,13 @@ import {
   Select,
   Sheet,
   Stat,
+  SwipeRow,
   TextInput,
   TotalsGrid,
   TotalsSkeleton,
 } from "../../components";
 import { useAsync } from "../../hooks/useAsync";
 import { useAuth } from "../../hooks/useAuth";
-import { useMembers } from "../../hooks/useMembers";
 import { useMonth } from "../../hooks/useMonth";
 import type { Debt, DebtStatus, DebtType } from "../../interfaces/finance";
 import {
@@ -76,14 +83,12 @@ type Draft = {
   amount: string;
   dueDate: string;
   type: DebtType;
-  debtorMemberId: string;
   status: DebtStatus;
 };
 
 const Debts = () => {
   const { month } = useMonth();
   const { user } = useAuth();
-  const members = useMembers();
   const [tab, setTab] = useState<DebtType>("family");
   const { data, loading, error, reload } = useAsync(
     () => listDebts(month),
@@ -124,9 +129,10 @@ const Debts = () => {
     amount: "",
     dueDate: "",
     type: tab,
-    debtorMemberId: user?.id ?? "",
     status: "open",
   });
+
+  useCreateParam(() => setDraft(newDraft()));
 
   const openEdit = (d: Debt) => {
     const inst = splitInstallment(d.title);
@@ -139,7 +145,6 @@ const Debts = () => {
       amount: formatBRL(d.amount),
       dueDate: isoToDateInput(d.dueDate),
       type: d.type,
-      debtorMemberId: d.debtorMemberId ?? user?.id ?? "",
       status: d.status,
     });
   };
@@ -163,8 +168,8 @@ const Debts = () => {
       ),
       amount: parseMoney(draft.amount),
       type: draft.type,
-      debtorMemberId:
-        draft.type === "individual" ? draft.debtorMemberId || user?.id : null,
+      // a API sempre grava a dívida pessoal no nome de quem está logado
+      debtorMemberId: draft.type === "individual" ? user?.id : null,
       dueDate: dateInputToISO(draft.dueDate),
       status: draft.status,
       targetMonth: month,
@@ -226,7 +231,7 @@ const Debts = () => {
       title="Dívidas"
       action={
         <PillButton $small onClick={() => setDraft(newDraft())}>
-          <PiPlusBold /> Nova
+          <Plus weight="bold" /> Nova
         </PillButton>
       }
     >
@@ -247,11 +252,15 @@ const Debts = () => {
       ) : (
         <TotalsGrid>
         <Stat>
-          <small>Valor total de dívidas</small>
+          <small>
+            <HandCoins weight="fill" /> Total de dívidas
+          </small>
           <strong>{formatBRL(total)}</strong>
         </Stat>
         <Stat $highlight>
-          <small>Em aberto</small>
+          <small>
+            <Clock weight="fill" /> Em aberto
+          </small>
           <strong>{formatBRL(open)}</strong>
         </Stat>
       </TotalsGrid>
@@ -259,11 +268,33 @@ const Debts = () => {
 
       {error && <ErrorBanner>{error}</ErrorBanner>}
 
+      {tab === "individual" && (
+        <InfoBanner>
+          <LockSimple weight="fill" />
+          <span>Suas dívidas pessoais só aparecem para você.</span>
+        </InfoBanner>
+      )}
+
       <Card>
+        <CardTitle
+          icon={<HandCoins weight="fill" />}
+          tone={tab === "family" ? "purple" : "indigo"}
+        >
+          {tab === "family" ? "Dívidas da casa" : "Minhas dívidas"}
+        </CardTitle>
+        {items.length > 0 && (
+          <Muted>Arraste para o lado para editar ou excluir.</Muted>
+        )}
         {loading && !data ? (
-          <ListSkeleton />
+          <Loading />
         ) : items.length === 0 ? (
-          <EmptyState>Nenhuma dívida neste mês.</EmptyState>
+          <EmptyState
+            icon={<HandCoins weight="duotone" />}
+            tone="purple"
+            title="Nenhuma dívida neste mês"
+          >
+            Que bom! Se tiver alguma, toque em Nova.
+          </EmptyState>
         ) : (
           <List>
             {items.map((d) => {
@@ -271,14 +302,21 @@ const Debts = () => {
               const inst = splitInstallment(d.title);
               const moved = d.status === "rolled_over";
               return (
-                <ListItem key={d.id} $done={paid || moved}>
+                <SwipeRow
+                  key={d.id}
+                  done={paid || moved}
+                  onEdit={() => openEdit(d)}
+                  onDelete={() =>
+                    run(() => deleteDebt(d.id), "Dívida excluída")
+                  }
+                >
                   <CheckButton
                     $checked={paid}
                     disabled={moved}
                     aria-label={paid ? "Desmarcar pagamento" : "Marcar como pago"}
                     onClick={() => toggle(d)}
                   >
-                    {paid && <PiCheckBold />}
+                    {paid && <Check weight="bold" />}
                   </CheckButton>
                   <ItemMain onClick={() => openEdit(d)}>
                     <ItemTitle $done={paid}>{inst.name}</ItemTitle>
@@ -294,13 +332,10 @@ const Debts = () => {
                           {debtStatusLabel[d.status]}
                         </Badge>
                       )}
-                      {tab === "individual" && d.debtorMember && (
-                        <Muted>{d.debtorMember.name}</Muted>
-                      )}
                     </Row>
                   </ItemMain>
                   <Amount>{formatBRL(d.amount)}</Amount>
-                </ListItem>
+                </SwipeRow>
               );
             })}
           </List>
@@ -376,28 +411,13 @@ const Debts = () => {
                 }
               >
                 <option value="family">Da casa</option>
-                <option value="individual">Pessoal</option>
+                <option value="individual">Pessoal (só minha)</option>
               </Select>
             </Field>
             {draft.type === "individual" && (
-              <Field>
-                Quem deve
-                <Select
-                  value={draft.debtorMemberId}
-                  onChange={(e) =>
-                    setDraft({ ...draft, debtorMemberId: e.target.value })
-                  }
-                >
-                  {members.length === 0 && user && (
-                    <option value={user.id}>{user.name}</option>
-                  )}
-                  {members.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
+              <Muted>
+                <LockSimple weight="fill" /> Fica no seu nome e só você vê.
+              </Muted>
             )}
             {draft.id && (
               <Field>
@@ -423,7 +443,9 @@ const Debts = () => {
 
           {editing && editing.status !== "rolled_over" && (
             <Card>
-              <Muted>Não vai dar pra pagar agora?</Muted>
+              <CardTitle icon={<Warning weight="fill" />} tone="warning">
+                Não vai dar pra pagar agora?
+              </CardTitle>
               <Row $gap="0.5rem" $justify="space-between">
                 <TextInput
                   type="date"
@@ -438,11 +460,11 @@ const Debts = () => {
                   disabled={!postponeTo}
                   onClick={postpone}
                 >
-                  <PiCalendarPlusBold /> Adiar
+                  <CalendarPlus weight="bold" /> Adiar
                 </PillButton>
               </Row>
               <PillButton type="button" $variant="ghost" $full onClick={rollover}>
-                <PiArrowBendUpRightBold /> Passar para{" "}
+                <ArrowBendUpRight weight="bold" /> Passar para{" "}
                 {monthLabel(shiftMonth(month, 1))}
               </PillButton>
               {editingInst?.current &&
@@ -457,7 +479,7 @@ const Debts = () => {
                       setDraft(null);
                     }}
                   >
-                    <PiStackPlusBold /> Lançar parcela {editingInst.current + 1}/
+                    <StackPlus weight="bold" /> Lançar parcela {editingInst.current + 1}/
                     {editingInst.total} no próximo mês
                   </PillButton>
                 )}
@@ -474,7 +496,7 @@ const Debts = () => {
                   setDraft(null);
               }}
             >
-              Excluir
+              <Trash weight="bold" /> Excluir
             </PillButton>
           )}
         </Sheet>

@@ -82,7 +82,10 @@ export interface SupplyInput {
 export interface MemberBalance {
   memberId: string;
   name: string;
+  /** Renda usada no rateio (fixa + extras do mês). */
   monthlyIncome: number;
+  baseIncome?: number;
+  extraIncome?: number;
   incomeRatio: number;
   expectedShare: number;
   directPayments: number;
@@ -111,17 +114,30 @@ export interface HouseMember {
 }
 
 /**
- * Entradas do mês (salário, INSS, vale, aluguel recebido...).
- * A API ainda não tem esse recurso: por enquanto fica salvo no navegador.
+ * Entradas do mês (salário, extras, vales).
+ * - salary: salário fixo
+ * - extra: valor variável que soma na renda da pessoa no rateio da casa
+ * - voucher: vale/benefício (entra no bruto, não no líquido)
  */
+export type IncomeKind = "salary" | "extra" | "voucher";
+
 export interface Income {
   id: string;
+  houseId: string;
+  memberId: string;
+  member?: MemberRef | null;
   title: string;
-  amount: number;
+  amount: number | string;
+  kind: IncomeKind;
   received: boolean;
-  /** Vale/benefício: entra no BRUTO mas não no LÍQUIDO (ex.: Vale Alimentação). */
-  isVoucher: boolean;
   billingMonth: string;
+  createdAt?: string;
 }
 
-export type IncomeInput = Omit<Income, "id">;
+export interface IncomeInput {
+  title: string;
+  amount: number;
+  kind: IncomeKind;
+  received?: boolean;
+  billingMonth: string;
+}

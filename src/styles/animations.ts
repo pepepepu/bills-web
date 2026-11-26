@@ -55,3 +55,29 @@ export const shimmer = keyframes`
   from { background-position: -200% 0; }
   to   { background-position: 200% 0; }
 `;
+
+export const spin = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
+export const spokeFade = keyframes`
+  from { opacity: 1; }
+  to   { opacity: 0.18; }
+`;
+
+/** Sub-botões do menu "Novo" saindo do botão central. */
+export const burstIn = keyframes`
+  from { opacity: 0; transform: translate(-50%, 0) scale(0.3); }
+  to   { opacity: 1; transform: translate(calc(-50% + var(--x)), var(--y)) scale(1); }
+`;
+
+export const burstOut = keyframes`
+  from { opacity: 1; transform: translate(calc(-50% + var(--x)), var(--y)) scale(1); }
+  to   { opacity: 0; transform: translate(-50%, 0) scale(0.3); }
+`;
+
+export const shake = keyframes`
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+`;

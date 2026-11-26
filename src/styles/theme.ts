@@ -11,6 +11,14 @@ export const theme = {
     surfaceHighlight: "#E5E5EA",
     glass: "rgba(255, 255, 255, 0.72)",
     glassBorder: "rgba(255, 255, 255, 0.6)",
+    /** Vidro estilo Apple: cards, barras e folhas. */
+    glassCard: "rgba(255, 255, 255, 0.58)",
+    glassStrong: "rgba(255, 255, 255, 0.78)",
+    glassSheet: "rgba(246, 246, 250, 0.86)",
+    glassEdge: "rgba(255, 255, 255, 0.75)",
+    /** Campos de texto. */
+    field: "rgba(255, 255, 255, 0.72)",
+    fieldBorder: "rgba(60, 60, 67, 0.14)",
     fill: "rgba(118, 118, 128, 0.12)",
     fillStrong: "rgba(118, 118, 128, 0.2)",
 
@@ -38,6 +46,17 @@ export const theme = {
 
     info: "#007AFF",
     infoLight: "rgba(0, 122, 255, 0.12)",
+
+    /** Cores de sistema extras, usadas nos ícones e na agenda. */
+    indigo: "#5856D6",
+    indigoLight: "rgba(88, 86, 214, 0.14)",
+    purple: "#AF52DE",
+    purpleLight: "rgba(175, 82, 222, 0.14)",
+    teal: "#30B0C7",
+    tealLight: "rgba(48, 176, 199, 0.14)",
+    mint: "#00C7BE",
+    orange: "#FF9500",
+    yellow: "#FFCC00",
 
     text: {
       title: "#1C1C1E",
@@ -83,8 +102,17 @@ export const theme = {
 
   shadows: {
     card: "0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04)",
+    glass:
+      "inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 0 0 0.5px rgba(255, 255, 255, 0.5), 0 1px 2px rgba(0, 0, 0, 0.03), 0 10px 30px rgba(60, 40, 120, 0.07)",
     float: "0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06)",
     button: "0 4px 14px rgba(242, 85, 159, 0.35)",
+  },
+
+  /** Desfoque do vidro. */
+  blur: {
+    card: "saturate(180%) blur(28px)",
+    bar: "saturate(190%) blur(30px)",
+    backdrop: "saturate(160%) blur(18px)",
   },
 
   motion: {

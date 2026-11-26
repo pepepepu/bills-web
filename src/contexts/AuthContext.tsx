@@ -103,6 +103,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("@Bills:user");
   };
 
+  const updateUser = (data: Partial<Member>) => {
+    setUser((current) => (current ? { ...current, ...data } : current));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -114,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        updateUser,
         clearError,
       }}
     >

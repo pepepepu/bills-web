@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "styled-components";
 import billsLogo from "../../assets/logos/bills-logo.svg";
 import { Button, Container, Image, Text } from "../../components";
-import { PiUserCheckFill, PiUserPlusFill } from "react-icons/pi";
+import { UserCheck, UserPlus } from "@phosphor-icons/react";
 
 const Hero = () => {
   const theme = useTheme();
@@ -17,7 +17,7 @@ const Hero = () => {
       alignItems="center"
       justifyContent="space-between"
       padding="40px 30px"
-      backgroundColor={theme.colors.background}
+      backgroundColor="transparent"
     >
       <Image
         src={billsLogo}
@@ -81,7 +81,7 @@ const Hero = () => {
             color={theme.colors.background}
             onClick={() => navigate("/login")}
           >
-            <PiUserCheckFill fontSize={"1.2rem"} />
+            <UserCheck weight="fill" size={20} />
             <Text>Entrar</Text>
           </Button>
           <Button
@@ -98,7 +98,7 @@ const Hero = () => {
             color={theme.colors.secondary}
             onClick={() => navigate("/register")}
           >
-            <PiUserPlusFill fontSize={"1.2rem"} />
+            <UserPlus weight="fill" size={20} />
             <Text>Criar conta</Text>
           </Button>
         </Container>

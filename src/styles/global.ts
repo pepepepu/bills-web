@@ -12,6 +12,13 @@ export const GlobalStyle = createGlobalStyle`
 
   body {
     background-color: ${({ theme }) => theme.colors.background};
+    /* manchas de cor suaves atrás do vidro (o blur precisa de algo atrás) */
+    background-image:
+      radial-gradient(40% 32% at 10% 6%, rgba(255, 111, 177, 0.26), transparent 70%),
+      radial-gradient(36% 30% at 95% 16%, rgba(88, 86, 214, 0.18), transparent 70%),
+      radial-gradient(44% 34% at 88% 80%, rgba(48, 176, 199, 0.18), transparent 70%),
+      radial-gradient(40% 32% at 6% 92%, rgba(255, 179, 64, 0.18), transparent 70%);
+    background-attachment: fixed;
     color: ${({ theme }) => theme.colors.text.body};
     font-family: ${({ theme }) => theme.fonts.body};
     font-size: ${({ theme }) => theme.fontSizes.md};

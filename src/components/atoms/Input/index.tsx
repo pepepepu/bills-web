@@ -1,6 +1,7 @@
 import React, { forwardRef, useState, useEffect } from "react";
 import styled from "styled-components";
-import { PiEye, PiEyeSlash } from "react-icons/pi";
+import { Eye, EyeSlash } from "@phosphor-icons/react";
+import { fieldFocus, fieldPadding, fieldSurface } from "../../../styles/field";
 
 export interface InputProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -109,41 +110,48 @@ const applyMask = (val: string, mask?: InputProps["mask"]) => {
 };
 
 const Container = styled.div<WrapperProps>`
+  ${fieldSurface}
   display: flex;
   align-items: center;
   width: ${({ $width }) => formatValue($width) || "100%"};
-  height: ${({ $height }) => formatValue($height)};
-  margin: ${({ $margin }) => formatValue($margin)};
-  flex: ${({ $flex }) => $flex};
-  background-color: ${({ $backgroundColor }) =>
-    $backgroundColor || "transparent"};
-  border: ${({ $border, $isFocused, $onFocusBorderColor }) =>
-    $isFocused && $onFocusBorderColor
-      ? `1px solid ${$onFocusBorderColor}`
-      : $border || "1px solid transparent"};
-  border-radius: 8px;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  ${({ $height }) => ($height ? `height: ${formatValue($height)};` : "")}
+  ${({ $margin }) => ($margin ? `margin: ${formatValue($margin)};` : "")}
+  ${({ $flex }) => ($flex !== undefined ? `flex: ${$flex};` : "")}
+  ${({ $backgroundColor }) =>
+    $backgroundColor ? `background-color: ${$backgroundColor};` : ""}
+  ${({ $border }) => ($border ? `border: ${$border};` : "")}
   opacity: ${({ $disabled }) => ($disabled ? 0.6 : 1)};
   cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "text")};
   box-sizing: border-box;
+
+  &:focus-within {
+    ${fieldFocus}
+    ${({ $onFocusBorderColor }) =>
+      $onFocusBorderColor ? `border-color: ${$onFocusBorderColor};` : ""}
+  }
 `;
 
 const StyledInputField = styled.input<StyledInputProps>`
   width: 100%;
   height: 100%;
+  min-height: 48px;
   border: none;
   outline: none;
   background: transparent;
-  padding: ${({ $padding }) => formatValue($padding) || "0.75rem 1rem"};
-  color: ${({ $textColor }) => $textColor || "inherit"};
-  font-size: ${({ $fontSize }) => formatValue($fontSize) || "0.875rem"};
+  padding: ${({ $padding }) => formatValue($padding) || fieldPadding};
+  ${({ $textColor }) =>
+    $textColor
+      ? `color: ${$textColor}; -webkit-text-fill-color: ${$textColor};`
+      : ""}
+  font-size: ${({ $fontSize }) => formatValue($fontSize) || "1rem"};
   font-family: inherit;
+  font-variant-numeric: tabular-nums;
 
   &::placeholder {
-    color: ${({ $placeholderColor }) => $placeholderColor || "inherit"};
-    opacity: 0.7;
+    ${({ $placeholderColor }) =>
+      $placeholderColor
+        ? `color: ${$placeholderColor}; -webkit-text-fill-color: ${$placeholderColor};`
+        : ""}
   }
 
   &:disabled {
@@ -155,10 +163,16 @@ const IconSlot = styled.div<IconContainerProps>`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-left: 1rem;
-  color: ${({ $color }) => $color || "inherit"};
-  font-size: ${({ $size }) => formatValue($size) || "1.25rem"};
+  padding-left: 0.95rem;
+  margin-right: -0.35rem;
+  color: ${({ $color, theme }) => $color || theme.colors.text.muted};
+  font-size: ${({ $size }) => formatValue($size) || "1.2rem"};
   flex-shrink: 0;
+  transition: color 0.2s ease;
+
+  ${Container}:focus-within & {
+    color: ${({ theme }) => theme.colors.primary};
+  }
 `;
 
 const VisibilityButton = styled.button<IconContainerProps>`
@@ -169,9 +183,10 @@ const VisibilityButton = styled.button<IconContainerProps>`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-right: 1rem;
-  color: ${({ $color }) => $color || "inherit"};
-  font-size: ${({ $size }) => formatValue($size) || "1.25rem"};
+  padding: 0 0.95rem;
+  align-self: stretch;
+  color: ${({ $color, theme }) => $color || theme.colors.text.muted};
+  font-size: ${({ $size }) => formatValue($size) || "1.2rem"};
   flex-shrink: 0;
   transition: opacity 0.2s ease;
 
@@ -298,7 +313,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             $size={iconsSize}
             $color={placeholderColor || textColor}
           >
-            {showPassword ? <PiEyeSlash /> : <PiEye />}
+            {showPassword ? <EyeSlash /> : <Eye />}
           </VisibilityButton>
         )}
       </Container>

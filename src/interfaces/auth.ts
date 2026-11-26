@@ -39,5 +39,7 @@ export interface AuthContextData {
   login: (credentials: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
+  /** Atualiza os dados do usuário salvos (ex.: renda fixa editada). */
+  updateUser: (data: Partial<Member>) => void;
   clearError: () => void;
 }

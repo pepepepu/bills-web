@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styled, { useTheme } from "styled-components";
-import { FiMail, FiLock, FiAlertCircle } from "react-icons/fi";
+import { EnvelopeSimple, LockSimple, WarningCircle } from "@phosphor-icons/react";
 import { useAuth } from "../../hooks/useAuth";
 import { media } from "../../styles/medias";
 import billsLogo from "../../assets/logos/bills-logo.svg";
@@ -133,7 +133,7 @@ const Login = () => {
 
         {error && (
           <ErrorBanner>
-            <FiAlertCircle size={18} />
+            <WarningCircle size={18} />
             <Text
               as="span"
               fontSize={theme.fontSizes.sm}
@@ -161,7 +161,7 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               withIcon
-              icon={<FiMail />}
+              icon={<EnvelopeSimple />}
               backgroundColor={theme.colors.surfaceLight}
               border={`1px solid ${theme.colors.border}`}
               onFocusBorderColor={theme.colors.primary}
@@ -189,7 +189,7 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               withIcon
-              icon={<FiLock />}
+              icon={<LockSimple />}
               backgroundColor={theme.colors.surfaceLight}
               border={`1px solid ${theme.colors.border}`}
               onFocusBorderColor={theme.colors.primary}

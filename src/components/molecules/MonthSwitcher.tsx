@@ -1,5 +1,5 @@
 import styled, { keyframes } from "styled-components";
-import { PiCaretLeftBold, PiCaretRightBold } from "react-icons/pi";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { useMonth } from "../../hooks/useMonth";
 import { currentMonth, monthLabel, shiftMonth } from "../../utils/format";
 
@@ -14,7 +14,11 @@ const Wrapper = styled.div`
   justify-content: space-between;
   padding: 3px;
   border-radius: 9999px;
-  background: ${({ theme }) => theme.colors.fill};
+  background: ${({ theme }) => theme.colors.glassCard};
+  backdrop-filter: ${({ theme }) => theme.blur.card};
+  -webkit-backdrop-filter: ${({ theme }) => theme.blur.card};
+  border: 0.5px solid ${({ theme }) => theme.colors.glassEdge};
+  box-shadow: ${({ theme }) => theme.shadows.glass};
 `;
 
 const Arrow = styled.button`
@@ -57,7 +61,7 @@ const MonthSwitcher = () => {
         aria-label="Mês anterior"
         onClick={() => setMonth(shiftMonth(month, -1))}
       >
-        <PiCaretLeftBold />
+        <CaretLeft weight="bold" />
       </Arrow>
       <Label
         key={month}
@@ -72,7 +76,7 @@ const MonthSwitcher = () => {
         aria-label="Próximo mês"
         onClick={() => setMonth(shiftMonth(month, 1))}
       >
-        <PiCaretRightBold />
+        <CaretRight weight="bold" />
       </Arrow>
     </Wrapper>
   );

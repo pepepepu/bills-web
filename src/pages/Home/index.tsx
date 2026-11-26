@@ -1,19 +1,38 @@
 import { Link } from "react-router-dom";
-import { PiArrowRightBold, PiCopyBold } from "react-icons/pi";
+import styled from "styled-components";
+import {
+  ArrowCircleDown,
+  ArrowCircleUp,
+  ArrowRight,
+  CalendarCheck,
+  ChartPieSlice,
+  Clock,
+  Confetti,
+  Copy,
+  HandCoins,
+  PiggyBank,
+  Receipt,
+  ShoppingCart,
+  SquaresFour,
+  UserPlus,
+} from "@phosphor-icons/react";
+import type { Tone } from "../../components";
+import { squircle } from "../../styles/squircle";
 import {
   AppLayout,
   Amount,
   Badge,
   Card,
+  CardTitle,
   EmptyState,
+  IconTile,
   ErrorBanner,
   List,
   ListItem,
-  ListSkeleton,
+  Loading,
   Muted,
   PillButton,
   Row,
-  SectionTitle,
   Stat,
   TotalsGrid,
   TotalsSkeleton,
@@ -33,6 +52,37 @@ const statusText = {
   SETTLED: { label: "Em dia", tone: "neutral" },
 } as const;
 
+const Shortcuts = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+`;
+
+const Shortcut = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.75rem;
+  ${squircle(16)}
+  background: ${({ theme }) => theme.colors.glassStrong};
+  border: 0.5px solid ${({ theme }) => theme.colors.glassEdge};
+  color: ${({ theme }) => theme.colors.text.body};
+  font-weight: ${({ theme }) => theme.fontWeights.semibold};
+  font-size: ${({ theme }) => theme.fontSizes.sm};
+  transition: transform 0.25s ${({ theme }) => theme.motion.spring};
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+const shortcuts: { to: string; label: string; icon: React.ReactNode; tone: Tone }[] = [
+  { to: "/entradas", label: "Entradas", icon: <ArrowCircleDown weight="fill" />, tone: "success" },
+  { to: "/contas", label: "Contas", icon: <Receipt weight="fill" />, tone: "info" },
+  { to: "/dividas", label: "Dívidas", icon: <HandCoins weight="fill" />, tone: "purple" },
+  { to: "/compras", label: "Compras", icon: <ShoppingCart weight="fill" />, tone: "warning" },
+];
+
 const Home = () => {
   const { user } = useAuth();
   const { month } = useMonth();
@@ -40,7 +90,7 @@ const Home = () => {
   const summary = useAsync(async () => {
     const [agenda, incomes] = await Promise.all([
       loadAgenda(month),
-      listIncomes(month),
+      listIncomes(month, true),
     ]);
     return { agenda, incomes: sumIncomes(incomes) };
   }, [month]);
@@ -48,7 +98,12 @@ const Home = () => {
   const settlement = useAsync(() => getSettlement(month), [month]);
 
   const agenda = summary.data?.agenda ?? [];
-  const incomes = summary.data?.incomes ?? { gross: 0, net: 0, received: 0 };
+  const incomes = summary.data?.incomes ?? {
+    gross: 0,
+    net: 0,
+    received: 0,
+    extra: 0,
+  };
   const outflow = agenda.reduce((acc, e) => acc + e.amount, 0);
   const toPay = agenda
     .filter((e) => !e.paid)
@@ -69,37 +124,70 @@ const Home = () => {
       ) : (
         <TotalsGrid>
         <Stat>
-          <small>Entradas (líquido)</small>
+          <small>
+            <ArrowCircleDown weight="fill" /> Entradas (líquido)
+          </small>
           <strong>{formatBRL(incomes.net)}</strong>
         </Stat>
         <Stat>
-          <small>Saídas do mês</small>
+          <small>
+            <ArrowCircleUp weight="fill" /> Saídas do mês
+          </small>
           <strong>{formatBRL(outflow)}</strong>
         </Stat>
         <Stat $highlight>
-          <small>Restante</small>
+          <small>
+            <PiggyBank weight="fill" /> Restante
+          </small>
           <strong>{formatBRL(remaining)}</strong>
         </Stat>
         <Stat>
-          <small>Falta pagar</small>
+          <small>
+            <Clock weight="fill" /> Falta pagar
+          </small>
           <strong>{formatBRL(toPay)}</strong>
         </Stat>
       </TotalsGrid>
       )}
 
       <Card>
-        <Row $justify="space-between">
-          <SectionTitle>A pagar</SectionTitle>
-          <Link to="/agenda">
-            <PillButton as="span" $variant="ghost" $small>
-              Agenda <PiArrowRightBold />
-            </PillButton>
-          </Link>
-        </Row>
+        <CardTitle icon={<SquaresFour weight="fill" />} tone="primary">
+          Atalhos
+        </CardTitle>
+        <Shortcuts>
+          {shortcuts.map((s) => (
+            <Shortcut key={s.to} to={s.to}>
+              <IconTile $tone={s.tone} $size={32}>
+                {s.icon}
+              </IconTile>
+              {s.label}
+            </Shortcut>
+          ))}
+        </Shortcuts>
+      </Card>
+
+      <Card>
+        <CardTitle
+          icon={<CalendarCheck weight="fill" />}
+          tone="indigo"
+          action={
+            <Link to="/agenda">
+              <PillButton as="span" $variant="ghost" $small>
+                Agenda <ArrowRight weight="bold" />
+              </PillButton>
+            </Link>
+          }
+        >
+          A pagar
+        </CardTitle>
         {summary.loading && !summary.data ? (
-          <ListSkeleton rows={3} />
+          <Loading />
         ) : upcoming.length === 0 ? (
-          <EmptyState>Tudo pago neste mês.</EmptyState>
+          <EmptyState
+            icon={<Confetti weight="duotone" />}
+            tone="success"
+            title="Tudo pago neste mês"
+          />
         ) : (
           <List>
             {upcoming.map((e) => (
@@ -122,15 +210,17 @@ const Home = () => {
       </Card>
 
       <Card>
-        <SectionTitle>Divisão da casa</SectionTitle>
+        <CardTitle icon={<ChartPieSlice weight="fill" />} tone="teal">
+          Divisão da casa
+        </CardTitle>
         <Muted>
-          Contas da casa divididas pela renda de cada um, mais as dívidas
-          pessoais.
+          Contas da casa divididas pela renda de cada um (renda fixa + extras
+          do mês), mais as dívidas pessoais.
         </Muted>
         {settlement.error ? (
           <ErrorBanner>{settlement.error}</ErrorBanner>
         ) : !settlement.data ? (
-          <ListSkeleton rows={2} />
+          <Loading />
         ) : (
           <List>
             {settlement.data.balances.map((b) => (
@@ -143,6 +233,9 @@ const Home = () => {
                     </Badge>
                   </Row>
                   <Muted>
+                    Renda {formatBRL(b.monthlyIncome)}
+                    {b.extraIncome ? ` (${formatBRL(b.extraIncome)} extra)` : ""}
+                    {" · "}
                     Parte {formatBRL(b.expectedShare)} (
                     {Math.round(b.incomeRatio * 100)}%) · pagou{" "}
                     {formatBRL(b.directPayments)} · dívidas{" "}
@@ -166,7 +259,9 @@ const Home = () => {
 
       {user?.houseId && (
         <Card>
-          <SectionTitle>Chamar alguém pra casa</SectionTitle>
+          <CardTitle icon={<UserPlus weight="fill" />} tone="info">
+            Chamar alguém pra casa
+          </CardTitle>
           <Muted>
             Na tela de cadastro, a pessoa escolhe "Entrar em Casa Existente" e
             cola este código.
@@ -176,7 +271,7 @@ const Home = () => {
             $full
             onClick={() => navigator.clipboard?.writeText(user.houseId)}
           >
-            <PiCopyBold /> Copiar código da casa
+            <Copy weight="bold" /> Copiar código da casa
           </PillButton>
         </Card>
       )}

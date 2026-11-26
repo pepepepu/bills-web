@@ -1,55 +1,27 @@
 import type { Income, IncomeInput } from "../interfaces/finance";
+import { apiRequest } from "./api";
 
-/**
- * A API ainda não tem /incomes. Enquanto isso as entradas ficam no
- * localStorage, com a mesma assinatura assíncrona dos outros services:
- * quando o endpoint existir, basta trocar o corpo destas funções por
- * apiRequest("/incomes", ...).
- */
-const KEY = "@Bills:incomes";
+/** Entradas da casa no mês. mine = só as do usuário logado. */
+export const listIncomes = (month?: string, mine?: boolean) =>
+  apiRequest<Income[]>("/incomes", {
+    query: { month, mine: mine ? "true" : undefined },
+  });
 
-const readAll = (): Income[] => {
-  try {
-    return JSON.parse(localStorage.getItem(KEY) || "[]");
-  } catch {
-    return [];
-  }
-};
+export const createIncome = (data: IncomeInput) =>
+  apiRequest<Income>("/incomes", { method: "POST", body: data });
 
-const writeAll = (items: Income[]) =>
-  localStorage.setItem(KEY, JSON.stringify(items));
+export const updateIncome = (id: string, data: Partial<IncomeInput>) =>
+  apiRequest<Income>(`/incomes/${id}`, { method: "PUT", body: data });
 
-const newId = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+export const toggleIncome = (id: string) =>
+  apiRequest<Income>(`/incomes/${id}/toggle`, { method: "PATCH" });
 
-export async function listIncomes(month: string): Promise<Income[]> {
-  return readAll().filter((i) => i.billingMonth === month);
-}
+export const deleteIncome = (id: string) =>
+  apiRequest<{ message: string }>(`/incomes/${id}`, { method: "DELETE" });
 
-export async function createIncome(data: IncomeInput): Promise<Income> {
-  const item = { ...data, id: newId() };
-  writeAll([...readAll(), item]);
-  return item;
-}
-
-export async function updateIncome(
-  id: string,
-  data: Partial<IncomeInput>,
-): Promise<Income> {
-  let updated: Income | undefined;
-  writeAll(
-    readAll().map((i) => {
-      if (i.id !== id) return i;
-      updated = { ...i, ...data };
-      return updated;
-    }),
-  );
-  if (!updated) throw new Error("Entrada não encontrada.");
-  return updated;
-}
-
-export async function deleteIncome(id: string): Promise<void> {
-  writeAll(readAll().filter((i) => i.id !== id));
-}
+/** Copia salário e vales do usuário de um mês para outro. */
+export const copyIncomes = (fromMonth: string, toMonth: string) =>
+  apiRequest<{ copied: number }>("/incomes/copy", {
+    method: "POST",
+    body: { fromMonth, toMonth },
+  });

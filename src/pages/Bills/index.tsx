@@ -1,12 +1,21 @@
 import { useState } from "react";
 import { useSheetState } from "../../hooks/useSheetState";
 import { useToast } from "../../hooks/useToast";
-import { PiCheckBold, PiCopyBold, PiPlusBold } from "react-icons/pi";
+import {
+  Check,
+  Copy,
+  Funnel,
+  Plus,
+  Receipt,
+  Clock,
+} from "@phosphor-icons/react";
+import { useCreateParam } from "../../hooks/useCreateParam";
 import {
   AppLayout,
   Amount,
   Badge,
   Card,
+  CardTitle,
   CheckButton,
   Chip,
   Chips,
@@ -16,9 +25,8 @@ import {
   Form,
   ItemMain,
   ItemTitle,
-  ListSkeleton,
   List,
-  ListItem,
+  Loading,
   MoneyInput,
   Muted,
   PillButton,
@@ -28,6 +36,7 @@ import {
   Select,
   Sheet,
   Stat,
+  SwipeRow,
   TextInput,
   TotalsGrid,
   TotalsSkeleton,
@@ -118,6 +127,8 @@ const Bills = () => {
     .filter((e) => !isExpensePaid(e))
     .reduce((acc, e) => acc + toNumber(e.amount), 0);
 
+  useCreateParam(() => setDraft({ ...emptyDraft }));
+
   const run = async (fn: () => Promise<unknown>, success?: string) => {
     try {
       await fn();
@@ -206,7 +217,7 @@ const Bills = () => {
       title="Contas do mês"
       action={
         <PillButton $small onClick={() => setDraft({ ...emptyDraft })}>
-          <PiPlusBold /> Nova
+          <Plus weight="bold" /> Nova
         </PillButton>
       }
     >
@@ -215,11 +226,15 @@ const Bills = () => {
       ) : (
         <TotalsGrid>
         <Stat>
-          <small>Total das contas</small>
+          <small>
+            <Receipt weight="fill" /> Total das contas
+          </small>
           <strong>{formatBRL(total)}</strong>
         </Stat>
         <Stat $highlight>
-          <small>Falta pagar</small>
+          <small>
+            <Clock weight="fill" /> Falta pagar
+          </small>
           <strong>{formatBRL(pending)}</strong>
         </Stat>
       </TotalsGrid>
@@ -243,31 +258,48 @@ const Bills = () => {
       {error && <ErrorBanner>{error}</ErrorBanner>}
 
       <Card>
+        <CardTitle icon={<Receipt weight="fill" />} tone="info">
+          Contas
+        </CardTitle>
+        {visible.length > 0 && (
+          <Muted>Arraste para o lado para editar ou excluir.</Muted>
+        )}
         {loading && !data ? (
-          <ListSkeleton />
+          <Loading />
         ) : items.length === 0 ? (
-          <EmptyState>
-            Nenhuma conta neste mês.
-            <Row $justify="center" style={{ marginTop: "1rem" }}>
+          <EmptyState
+            icon={<Receipt weight="duotone" />}
+            tone="info"
+            title="Nenhuma conta neste mês"
+            action={
               <PillButton $variant="outline" $small onClick={copyPrevious}>
-                <PiCopyBold /> Copiar contas fixas do mês anterior
+                <Copy weight="bold" /> Copiar contas fixas do mês anterior
               </PillButton>
-            </Row>
+            }
+          >
+            Luz, água, internet, aluguel...
           </EmptyState>
         ) : visible.length === 0 ? (
-          <EmptyState>Nada aqui com esse filtro.</EmptyState>
+          <EmptyState icon={<Funnel weight="duotone" />} title="Nada com esse filtro" />
         ) : (
           <List>
             {visible.map((item) => {
               const paid = isExpensePaid(item);
               return (
-                <ListItem key={item.id} $done={paid}>
+                <SwipeRow
+                  key={item.id}
+                  done={paid}
+                  onEdit={() => openEdit(item)}
+                  onDelete={() =>
+                    run(() => deleteExpense(item.id), "Conta excluída")
+                  }
+                >
                   <CheckButton
                     $checked={paid}
                     aria-label={paid ? "Desmarcar pagamento" : "Marcar como pago"}
                     onClick={() => toggle(item)}
                   >
-                    {paid && <PiCheckBold />}
+                    {paid && <Check weight="bold" />}
                   </CheckButton>
                   <ItemMain onClick={() => openEdit(item)}>
                     <ItemTitle $done={paid}>{item.title}</ItemTitle>
@@ -284,7 +316,7 @@ const Bills = () => {
                     </Row>
                   </ItemMain>
                   <Amount>{formatBRL(item.amount)}</Amount>
-                </ListItem>
+                </SwipeRow>
               );
             })}
           </List>

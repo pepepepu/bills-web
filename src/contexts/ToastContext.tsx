@@ -1,10 +1,6 @@
 import React, { createContext, useCallback, useRef, useState } from "react";
 import styled, { css } from "styled-components";
-import {
-  PiCheckCircleFill,
-  PiInfoFill,
-  PiWarningCircleFill,
-} from "react-icons/pi";
+import { CheckCircle, Info, WarningCircle } from "@phosphor-icons/react";
 import { toastIn, toastOut } from "../styles/animations";
 
 type ToastKind = "success" | "error" | "info";
@@ -46,10 +42,10 @@ const Pill = styled.div<{ $kind: ToastKind; $leaving: boolean }>`
   max-width: 420px;
   padding: 0.7rem 1.1rem 0.7rem 0.8rem;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border: 0.5px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: saturate(190%) blur(30px);
+  -webkit-backdrop-filter: saturate(190%) blur(30px);
+  border: 0.5px solid rgba(255, 255, 255, 0.8);
   box-shadow: ${({ theme }) => theme.shadows.float};
   color: ${({ theme }) => theme.colors.text.body};
   font-size: ${({ theme }) => theme.fontSizes.sm};
@@ -77,9 +73,9 @@ const Pill = styled.div<{ $kind: ToastKind; $leaving: boolean }>`
 `;
 
 const icons = {
-  success: <PiCheckCircleFill />,
-  error: <PiWarningCircleFill />,
-  info: <PiInfoFill />,
+  success: <CheckCircle weight="fill" />,
+  error: <WarningCircle weight="fill" />,
+  info: <Info weight="fill" />,
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {

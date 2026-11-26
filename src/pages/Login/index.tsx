@@ -1,11 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useTheme } from "styled-components";
-import {
-  PiEnvelopeSimple,
-  PiLockSimple,
-  PiUserCheckFill,
-} from "react-icons/pi";
+import { EnvelopeSimple, LockSimple, UserCheck } from "@phosphor-icons/react";
 import billsLogo from "../../assets/logos/bills-logo.svg";
 import {
   Container,
@@ -38,15 +34,6 @@ const Login = () => {
     }
   };
 
-  const inputStyle = {
-    backgroundColor: theme.colors.surface,
-    border: `1px solid ${theme.colors.border}`,
-    onFocusBorderColor: theme.colors.primary,
-    textColor: theme.colors.text.body,
-    placeholderColor: theme.colors.text.muted,
-    height: 52,
-  };
-
   return (
     <Container
       height="100dvh"
@@ -56,7 +43,7 @@ const Login = () => {
       alignItems="center"
       justifyContent="space-between"
       padding="40px 30px"
-      backgroundColor={theme.colors.background}
+      backgroundColor="transparent"
     >
       <Image
         src={billsLogo}
@@ -92,29 +79,27 @@ const Login = () => {
         <Form onSubmit={handleSubmit}>
           {error && <ErrorBanner>{error}</ErrorBanner>}
           <Input
-            {...inputStyle}
             type="email"
             placeholder="E-mail"
             autoComplete="email"
             withIcon
-            icon={<PiEnvelopeSimple />}
+            icon={<EnvelopeSimple />}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
           <Input
-            {...inputStyle}
             mask="password"
             placeholder="Senha"
             autoComplete="current-password"
             withIcon
-            icon={<PiLockSimple />}
+            icon={<LockSimple />}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
           <PillButton type="submit" $full disabled={loading}>
-            <PiUserCheckFill />
+            <UserCheck weight="fill" />
             {loading ? "Entrando..." : "Entrar"}
           </PillButton>
           <Muted style={{ textAlign: "center" }}>

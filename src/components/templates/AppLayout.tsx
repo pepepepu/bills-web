@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { PiSignOutBold } from "react-icons/pi";
+import { SignOut } from "@phosphor-icons/react";
 import billsLogo from "../../assets/logos/bills-logo.svg";
 import { useAuth } from "../../hooks/useAuth";
 import { useMonth } from "../../hooks/useMonth";
@@ -14,7 +14,7 @@ const Page = styled.div`
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: ${({ theme }) => theme.colors.background};
+  background: transparent;
   overflow: hidden;
 `;
 
@@ -23,9 +23,11 @@ const Header = styled.header<{ $scrolled: boolean }>`
   position: relative;
   z-index: 10;
   background: ${({ theme, $scrolled }) =>
-    $scrolled ? theme.colors.glass : theme.colors.background};
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
+    $scrolled ? theme.colors.glass : "transparent"};
+  backdrop-filter: ${({ theme, $scrolled }) =>
+    $scrolled ? theme.blur.bar : "none"};
+  -webkit-backdrop-filter: ${({ theme, $scrolled }) =>
+    $scrolled ? theme.blur.bar : "none"};
   box-shadow: ${({ $scrolled, theme }) =>
     $scrolled ? `0 0.5px 0 ${theme.colors.separator}` : "none"};
   transition:
@@ -49,6 +51,7 @@ const TopRow = styled.div`
 `;
 
 const Scroll = styled.main`
+  margin-top: -1px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -126,7 +129,7 @@ const AppLayout = ({ title, action, children }: AppLayoutProps) => {
               objectFit="contain"
             />
             <IconButton type="button" aria-label="Sair" onClick={logout}>
-              <PiSignOutBold />
+              <SignOut weight="bold" />
             </IconButton>
           </TopRow>
           <MonthSwitcher />

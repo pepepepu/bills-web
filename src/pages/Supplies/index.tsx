@@ -1,11 +1,23 @@
 import { useSheetState } from "../../hooks/useSheetState";
 import { useToast } from "../../hooks/useToast";
-import { PiCheckBold, PiPlusBold } from "react-icons/pi";
+import {
+  Basket,
+  Broom,
+  Carrot,
+  Check,
+  Drop,
+  Package,
+  Plus,
+  ShoppingCart,
+  Storefront,
+  Receipt,
+} from "@phosphor-icons/react";
+import { useCreateParam } from "../../hooks/useCreateParam";
 import {
   AppLayout,
   Amount,
   Card,
-  CardSkeleton,
+  CardTitle,
   CheckButton,
   EmptyState,
   ErrorBanner,
@@ -14,14 +26,14 @@ import {
   ItemMain,
   ItemTitle,
   List,
-  ListItem,
+  Loading,
   MoneyInput,
   Muted,
   PillButton,
   Row,
-  SectionTitle,
   Sheet,
   Stat,
+  SwipeRow,
   TextInput,
   TotalsGrid,
   TotalsSkeleton,
@@ -53,6 +65,19 @@ const emptyDraft: Draft = {
   actualCost: "",
 };
 
+/** Ícone e cor do título de cada categoria. */
+const categoryLook = (cat: string) => {
+  const c = cat.toLowerCase();
+  if (c.includes("feira") || c.includes("hortifruti"))
+    return { icon: <Carrot weight="fill" />, tone: "success" as const };
+  if (c.includes("limpeza")) return { icon: <Broom weight="fill" />, tone: "teal" as const };
+  if (c.includes("higiene")) return { icon: <Drop weight="fill" />, tone: "info" as const };
+  if (c.includes("mercado") || c.includes("assa"))
+    return { icon: <Basket weight="fill" />, tone: "warning" as const };
+  if (c.includes("loja")) return { icon: <Storefront weight="fill" />, tone: "purple" as const };
+  return { icon: <Package weight="fill" />, tone: "indigo" as const };
+};
+
 const Supplies = () => {
   const { month } = useMonth();
   const { data, loading, error, reload } = useAsync(
@@ -69,6 +94,17 @@ const Supplies = () => {
     .reduce((a, s) => a + toNumber(s.actualCost || s.estimatedCost), 0);
 
   const categories = [...new Set(items.map((s) => s.category))].sort();
+
+  useCreateParam(() => setDraft({ ...emptyDraft }));
+
+  const openEdit = (s: Supply) =>
+    setDraft({
+      id: s.id,
+      itemName: s.itemName,
+      category: s.category,
+      estimatedCost: formatBRL(s.estimatedCost),
+      actualCost: formatBRL(s.actualCost),
+    });
 
   const run = async (fn: () => Promise<unknown>, success?: string) => {
     try {
@@ -115,7 +151,7 @@ const Supplies = () => {
       title="Compras da casa"
       action={
         <PillButton $small onClick={() => setDraft({ ...emptyDraft })}>
-          <PiPlusBold /> Item
+          <Plus weight="bold" /> Item
         </PillButton>
       }
     >
@@ -124,11 +160,15 @@ const Supplies = () => {
       ) : (
         <TotalsGrid>
         <Stat>
-          <small>Previsto</small>
+          <small>
+            <Receipt weight="fill" /> Previsto
+          </small>
           <strong>{formatBRL(estimated)}</strong>
         </Stat>
         <Stat $highlight>
-          <small>Já gasto</small>
+          <small>
+            <ShoppingCart weight="fill" /> Já gasto
+          </small>
           <strong>{formatBRL(spent)}</strong>
         </Stat>
       </TotalsGrid>
@@ -137,38 +177,52 @@ const Supplies = () => {
       {error && <ErrorBanner>{error}</ErrorBanner>}
 
       {loading && !data ? (
-        <CardSkeleton />
+        <Card>
+          <Loading />
+        </Card>
       ) : items.length === 0 ? (
         <Card>
-          <EmptyState>Lista de compras vazia neste mês.</EmptyState>
+          <EmptyState
+            icon={<ShoppingCart weight="duotone" />}
+            tone="warning"
+            title="Lista de compras vazia"
+            action={
+              <PillButton
+                $variant="outline"
+                $small
+                onClick={() => setDraft({ ...emptyDraft })}
+              >
+                <Plus weight="bold" /> Adicionar item
+              </PillButton>
+            }
+          >
+            Mercado, feira, limpeza... tudo que a casa precisa no mês.
+          </EmptyState>
         </Card>
       ) : (
         categories.map((cat) => (
           <Card key={cat}>
-            <SectionTitle>{cat}</SectionTitle>
+            <CardTitle {...categoryLook(cat)}>{cat}</CardTitle>
             <List>
               {items
                 .filter((s) => s.category === cat)
                 .map((s) => (
-                  <ListItem key={s.id} $done={s.isPurchased}>
+                  <SwipeRow
+                    key={s.id}
+                    done={s.isPurchased}
+                    onEdit={() => openEdit(s)}
+                    onDelete={() =>
+                      run(() => deleteSupply(s.id), "Item excluído")
+                    }
+                  >
                     <CheckButton
                       $checked={s.isPurchased}
                       aria-label={s.isPurchased ? "Desmarcar" : "Comprado"}
                       onClick={() => toggle(s)}
                     >
-                      {s.isPurchased && <PiCheckBold />}
+                      {s.isPurchased && <Check weight="bold" />}
                     </CheckButton>
-                    <ItemMain
-                      onClick={() =>
-                        setDraft({
-                          id: s.id,
-                          itemName: s.itemName,
-                          category: s.category,
-                          estimatedCost: formatBRL(s.estimatedCost),
-                          actualCost: formatBRL(s.actualCost),
-                        })
-                      }
-                    >
+                    <ItemMain onClick={() => openEdit(s)}>
                       <ItemTitle $done={s.isPurchased}>{s.itemName}</ItemTitle>
                       <Muted>Previsto {formatBRL(s.estimatedCost)}</Muted>
                     </ItemMain>
@@ -179,7 +233,7 @@ const Supplies = () => {
                           : s.estimatedCost,
                       )}
                     </Amount>
-                  </ListItem>
+                  </SwipeRow>
                 ))}
             </List>
           </Card>
