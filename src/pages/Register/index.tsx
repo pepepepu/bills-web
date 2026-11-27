@@ -111,7 +111,7 @@ const Register = () => {
           </ErrorBanner>
         )}
 
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit} disabled={loading}>
           <Field>
             Seu nome
             <Input

@@ -8,6 +8,7 @@ interface MoneyInputProps {
   id?: string;
   required?: boolean;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 /**
@@ -21,6 +22,7 @@ const MoneyInput = ({
   id,
   required,
   placeholder = "R$ 0,00",
+  disabled,
 }: MoneyInputProps) => (
   <Input
     id={id}
@@ -30,6 +32,7 @@ const MoneyInput = ({
     value={value}
     autoFocus={autoFocus}
     required={required}
+    disabled={disabled}
     withIcon
     icon={<CurrencyCircleDollar />}
     onChange={(e) => onChange(e.target.value)}

@@ -120,7 +120,6 @@ const Container = styled.div<WrapperProps>`
   ${({ $backgroundColor }) =>
     $backgroundColor ? `background-color: ${$backgroundColor};` : ""}
   ${({ $border }) => ($border ? `border: ${$border};` : "")}
-  opacity: ${({ $disabled }) => ($disabled ? 0.6 : 1)};
   cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "text")};
   box-sizing: border-box;
 
@@ -190,8 +189,12 @@ const VisibilityButton = styled.button<IconContainerProps>`
   flex-shrink: 0;
   transition: opacity 0.2s ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     opacity: 0.8;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
   }
 `;
 

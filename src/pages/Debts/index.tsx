@@ -110,7 +110,10 @@ const Debts = () => {
     .filter((d) => !isDebtPaid(d))
     .reduce((acc, d) => acc + toNumber(d.amount), 0);
 
+  const [saving, setSaving] = useState(false);
+
   const run = async (fn: () => Promise<unknown>, success?: string) => {
+    setSaving(true);
     try {
       await fn();
       await reload();
@@ -119,6 +122,8 @@ const Debts = () => {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro inesperado.");
       return false;
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -348,7 +353,7 @@ const Debts = () => {
           onClose={() => setDraft(null)}
           closing={closing}
         >
-          <Form onSubmit={save}>
+          <Form onSubmit={save} disabled={saving}>
             <Field>
               Descrição
               <TextInput
@@ -437,7 +442,7 @@ const Debts = () => {
               </Field>
             )}
             <PillButton type="submit" $full>
-              Salvar
+              {saving ? "Salvando..." : "Salvar"}
             </PillButton>
           </Form>
 
@@ -450,6 +455,7 @@ const Debts = () => {
                 <TextInput
                   type="date"
                   aria-label="Nova data"
+                  disabled={saving}
                   value={postponeTo}
                   onChange={(e) => setPostponeTo(e.target.value)}
                 />
@@ -457,13 +463,19 @@ const Debts = () => {
                   type="button"
                   $variant="ghost"
                   $small
-                  disabled={!postponeTo}
+                  disabled={saving || !postponeTo}
                   onClick={postpone}
                 >
                   <CalendarPlus weight="bold" /> Adiar
                 </PillButton>
               </Row>
-              <PillButton type="button" $variant="ghost" $full onClick={rollover}>
+              <PillButton
+                type="button"
+                $variant="ghost"
+                $full
+                disabled={saving}
+                onClick={rollover}
+              >
                 <ArrowBendUpRight weight="bold" /> Passar para{" "}
                 {monthLabel(shiftMonth(month, 1))}
               </PillButton>
@@ -474,6 +486,7 @@ const Debts = () => {
                     type="button"
                     $variant="ghost"
                     $full
+                    disabled={saving}
                     onClick={async () => {
                       await nextInstallment(editing);
                       setDraft(null);

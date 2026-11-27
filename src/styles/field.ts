@@ -19,7 +19,15 @@ export const fieldSurface = css`
   transition:
     border-color 0.2s ease,
     box-shadow 0.25s ease,
-    background-color 0.2s ease;
+    background-color 0.2s ease,
+    opacity 0.2s ease;
+
+  /* desabilitado (ex.: enquanto o formulário está salvando) */
+  &:disabled,
+  &:has(:disabled) {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 `;
 
 export const fieldFocus = css`

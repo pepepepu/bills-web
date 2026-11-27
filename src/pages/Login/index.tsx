@@ -76,7 +76,7 @@ const Login = () => {
           </Text>
         </Container>
 
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit} disabled={loading}>
           {error && <ErrorBanner>{error}</ErrorBanner>}
           <Input
             type="email"

@@ -524,11 +524,36 @@ export const Skeleton = styled.span<{
 
 /* ---------- Formulários ---------- */
 
-export const Form = styled.form`
+const FormRoot = styled.form`
   display: flex;
   flex-direction: column;
   gap: 1rem;
 `;
+
+const FormFieldset = styled.fieldset`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+`;
+
+type FormProps = React.FormHTMLAttributes<HTMLFormElement> & {
+  /** Desabilita todos os campos e botões do formulário (ex.: salvando). */
+  disabled?: boolean;
+};
+
+/**
+ * Formulário padrão. Com `disabled`, um <fieldset disabled> trava de uma vez
+ * todos os inputs, selects e botões de dentro, enquanto a requisição roda.
+ */
+export const Form = ({ disabled = false, children, ...rest }: FormProps) => (
+  <FormRoot aria-busy={disabled || undefined} {...rest}>
+    <FormFieldset disabled={disabled}>{children}</FormFieldset>
+  </FormRoot>
+);
 
 export const Field = styled.label`
   display: flex;

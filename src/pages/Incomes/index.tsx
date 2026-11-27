@@ -375,7 +375,7 @@ const Incomes = () => {
           onClose={() => setDraft(null)}
           closing={closing}
         >
-          <Form onSubmit={save}>
+          <Form onSubmit={save} disabled={saving}>
             <Field>
               Descrição
               <TextInput
@@ -449,7 +449,7 @@ const Incomes = () => {
           onClose={() => setIncomeDraft(null)}
           closing={incomeClosing}
         >
-          <Form onSubmit={saveBaseIncome}>
+          <Form onSubmit={saveBaseIncome} disabled={saving}>
             <Field>
               Quanto você recebe por mês
               <MoneyInput

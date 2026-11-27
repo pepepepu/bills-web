@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useSheetState } from "../../hooks/useSheetState";
 import { useToast } from "../../hooks/useToast";
 import {
@@ -106,7 +107,10 @@ const Supplies = () => {
       actualCost: formatBRL(s.actualCost),
     });
 
+  const [saving, setSaving] = useState(false);
+
   const run = async (fn: () => Promise<unknown>, success?: string) => {
+    setSaving(true);
     try {
       await fn();
       await reload();
@@ -115,6 +119,8 @@ const Supplies = () => {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro inesperado.");
       return false;
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -246,7 +252,7 @@ const Supplies = () => {
           onClose={() => setDraft(null)}
           closing={closing}
         >
-          <Form onSubmit={save}>
+          <Form onSubmit={save} disabled={saving}>
             <Field>
               Item
               <TextInput
@@ -295,7 +301,7 @@ const Supplies = () => {
               </Field>
             </Row>
             <PillButton type="submit" $full>
-              Salvar
+              {saving ? "Salvando..." : "Salvar"}
             </PillButton>
             {draft.id && (
               <PillButton

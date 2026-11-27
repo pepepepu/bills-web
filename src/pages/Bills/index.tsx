@@ -178,8 +178,13 @@ const Bills = () => {
 
   const remove = async () => {
     if (!draft?.id) return;
-    if (await run(() => deleteExpense(draft.id as string), "Conta excluída"))
-      setDraft(null);
+    setSaving(true);
+    const ok = await run(
+      () => deleteExpense(draft.id as string),
+      "Conta excluída",
+    );
+    setSaving(false);
+    if (ok) setDraft(null);
   };
 
   const copyPrevious = () =>
@@ -329,7 +334,7 @@ const Bills = () => {
           onClose={() => setDraft(null)}
           closing={closing}
         >
-          <Form onSubmit={save}>
+          <Form onSubmit={save} disabled={saving}>
             <Field>
               Descrição
               <TextInput
