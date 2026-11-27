@@ -258,7 +258,7 @@ const Supplies = () => {
               Item
               <TextInput
                 required
-                placeholder="Ex: Feira, Assaí, Bujão"
+                placeholder="Ex: Feira, mercado, gás"
                 value={draft.itemName}
                 onChange={(e) =>
                   setDraft({ ...draft, itemName: e.target.value })

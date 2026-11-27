@@ -115,7 +115,7 @@ const Register = () => {
           <Field>
             Seu nome
             <Input
-              placeholder="Ex: Pedro Paulo"
+              placeholder="Seu nome"
               autoComplete="name"
               withIcon
               icon={<User />}

@@ -451,7 +451,7 @@ const Debts = () => {
               <TextInput
                 required
                 minLength={2}
-                placeholder="Ex: Empréstimo da Ana"
+                placeholder="Ex: Empréstimo, cartão, conserto"
                 value={draft.name}
                 onChange={(e) => setDraft({ ...draft, name: e.target.value })}
               />
@@ -534,7 +534,7 @@ const Debts = () => {
             <Field>
               Para quem (opcional)
               <TextInput
-                placeholder="Ex: Ana Karla"
+                placeholder="Nome de quem vai receber"
                 maxLength={120}
                 value={draft.creditorName}
                 onChange={(e) =>

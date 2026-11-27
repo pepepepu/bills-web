@@ -67,7 +67,7 @@ export const todayISODate = () => {
 
 /**
  * Parcelas antigas: antes a API não tinha campo próprio e o número ficava no
- * título ("Parcela Ana Karla [2/4]"). Hoje vem em installmentNumber/Total;
+ * título ("Empréstimo [2/4]"). Hoje vem em installmentNumber/Total;
  * use debtInstallment() que entende os dois jeitos.
  */
 const INSTALLMENT_RE = /\s*\[(\d+)\/(\d+)\]/;
