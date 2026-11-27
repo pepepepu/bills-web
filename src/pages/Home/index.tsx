@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   ArrowCircleDown,
@@ -12,6 +12,7 @@ import {
   HandCoins,
   PiggyBank,
   Receipt,
+  Repeat,
   ShoppingCart,
   SquaresFour,
   UserPlus,
@@ -34,6 +35,7 @@ import {
   PillButton,
   Row,
   Stat,
+  TodayCard,
   TotalsGrid,
   TotalsSkeleton,
 } from "../../components";
@@ -81,9 +83,18 @@ const shortcuts: { to: string; label: string; icon: React.ReactNode; tone: Tone 
   { to: "/contas", label: "Contas", icon: <Receipt weight="fill" />, tone: "info" },
   { to: "/dividas", label: "Dívidas", icon: <HandCoins weight="fill" />, tone: "purple" },
   { to: "/compras", label: "Compras", icon: <ShoppingCart weight="fill" />, tone: "warning" },
+  { to: "/assinaturas", label: "Assinaturas", icon: <Repeat weight="fill" />, tone: "teal" },
 ];
 
+/** Tela de cada tipo de lançamento (para o card "Para hoje"). */
+const kindPath = {
+  expense: "/contas",
+  debt: "/dividas",
+  subscription: "/assinaturas",
+} as const;
+
 const Home = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { month } = useMonth();
 
@@ -114,10 +125,24 @@ const Home = () => {
     .filter((e) => !e.paid)
     .sort((a, b) => (a.day ?? "9999").localeCompare(b.day ?? "9999"))
     .slice(0, 5);
+  const dueToday = agenda
+    .filter((e) => !e.paid && e.day === today)
+    .map((e) => ({
+      id: e.id,
+      kind: e.kind,
+      title: e.title,
+      amount: e.amount,
+      onOpen: () => navigate(kindPath[e.kind]),
+    }));
 
   return (
-    <AppLayout title={`Olá, ${user?.name?.split(" ")[0] ?? ""}`}>
+    <AppLayout
+      title={`Olá, ${user?.name?.split(" ")[0] ?? ""}`}
+      onRefresh={() => Promise.all([summary.reload(), settlement.reload()])}
+    >
       {summary.error && <ErrorBanner>{summary.error}</ErrorBanner>}
+
+      <TodayCard items={dueToday} />
 
       {summary.loading && !summary.data ? (
         <TotalsSkeleton count={4} />

@@ -9,6 +9,7 @@ import {
   House,
   Plus,
   Receipt,
+  Repeat,
   ShoppingCart,
   type Icon,
 } from "@phosphor-icons/react";
@@ -40,32 +41,40 @@ const createOptions: {
     to: "/entradas",
     icon: ArrowCircleDown,
     gradient: "linear-gradient(145deg, #5BE07F 0%, #28B04E 100%)",
-    x: -112,
-    y: -100,
+    x: -132,
+    y: -84,
   },
   {
     label: "Conta",
     to: "/contas",
     icon: Receipt,
     gradient: "linear-gradient(145deg, #4DA3FF 0%, #0A6CF0 100%)",
-    x: -46,
-    y: -172,
+    x: -84,
+    y: -166,
   },
   {
     label: "Dívida",
     to: "/dividas",
     icon: HandCoins,
     gradient: "linear-gradient(145deg, #C77DFF 0%, #8E3FD1 100%)",
-    x: 46,
-    y: -172,
+    x: 0,
+    y: -198,
+  },
+  {
+    label: "Assinatura",
+    to: "/assinaturas",
+    icon: Repeat,
+    gradient: "linear-gradient(145deg, #5AD8EA 0%, #1E9BB3 100%)",
+    x: 84,
+    y: -166,
   },
   {
     label: "Compras",
     to: "/compras",
     icon: ShoppingCart,
     gradient: "linear-gradient(145deg, #FFB340 0%, #FF8A00 100%)",
-    x: 112,
-    y: -100,
+    x: 132,
+    y: -84,
   },
 ];
 
@@ -208,7 +217,7 @@ const Option = styled.button<{ $closing: boolean; $i: number }>`
     $closing
       ? css`
           animation: ${burstOut} 0.26s ${theme.motion.ease} both;
-          animation-delay: ${(3 - $i) * 25}ms;
+          animation-delay: ${(createOptions.length - 1 - $i) * 25}ms;
         `
       : css`
           animation: ${burstIn} 0.55s ${theme.motion.bounce} both;

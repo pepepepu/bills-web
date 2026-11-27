@@ -209,6 +209,7 @@ const Incomes = () => {
 
   return (
     <AppLayout
+      onRefresh={reload}
       title="Entradas"
       action={
         <PillButton $small onClick={() => setDraft({ ...emptyDraft })}>

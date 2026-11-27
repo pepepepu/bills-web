@@ -22,5 +22,9 @@ export const rolloverDebt = (id: string, nextMonth: string) =>
     body: { nextMonth },
   });
 
-export const deleteDebt = (id: string) =>
-  apiRequest<{ message: string }>(`/debts/${id}`, { method: "DELETE" });
+/** following: numa dívida parcelada, exclui também as parcelas seguintes. */
+export const deleteDebt = (id: string, scope?: "following") =>
+  apiRequest<{ message: string }>(`/debts/${id}`, {
+    method: "DELETE",
+    query: { scope },
+  });

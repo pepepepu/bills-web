@@ -38,6 +38,7 @@ import {
   Stat,
   SwipeRow,
   TextInput,
+  TodayCard,
   TotalsGrid,
   TotalsSkeleton,
 } from "../../components";
@@ -63,6 +64,7 @@ import {
   isoToDateInput,
   parseMoney,
   shiftMonth,
+  todayISODate,
   toNumber,
 } from "../../utils/format";
 import { expenseStatusLabel, isExpensePaid } from "../../utils/status";
@@ -217,8 +219,21 @@ const Bills = () => {
       paidByMemberId: item.paidByMemberId ?? "",
     });
 
+  const today = todayISODate();
+  const dueToday = items
+    .filter((e) => !isExpensePaid(e) && e.dueDate?.slice(0, 10) === today)
+    .map((e) => ({
+      id: e.id,
+      kind: "expense" as const,
+      title: e.title,
+      amount: toNumber(e.amount),
+      onOpen: () => openEdit(e),
+      onPay: () => toggle(e),
+    }));
+
   return (
     <AppLayout
+      onRefresh={reload}
       title="Contas do mês"
       action={
         <PillButton $small onClick={() => setDraft({ ...emptyDraft })}>
@@ -244,6 +259,8 @@ const Bills = () => {
         </Stat>
       </TotalsGrid>
       )}
+
+      <TodayCard items={dueToday} />
 
       <Chips>
         <Chip $active={filter === "all"} onClick={() => setFilter("all")}>
@@ -383,6 +400,7 @@ const Bills = () => {
                 </SegmentButton>
               </Segmented>
             </Field>
+            {!draft.isShared && <Muted>Só você vê esta conta.</Muted>}
             <Field>
               Repete
               <Select

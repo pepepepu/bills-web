@@ -154,6 +154,7 @@ const Supplies = () => {
 
   return (
     <AppLayout
+      onRefresh={reload}
       title="Compras da casa"
       action={
         <PillButton $small onClick={() => setDraft({ ...emptyDraft })}>

@@ -16,6 +16,9 @@ export interface Expense {
   isShared: boolean;
   paidByMemberId: string | null;
   paidByMember?: MemberRef | null;
+  /** Quem lançou. Conta "só minha" só aparece para essa pessoa. */
+  ownerMemberId?: string | null;
+  ownerMember?: MemberRef | null;
   status: ExpenseStatus;
   billingMonth: string;
   createdAt?: string;
@@ -46,6 +49,13 @@ export interface Debt {
   status: DebtStatus;
   targetMonth: string;
   dueDate: string | null;
+  /** Parcela deste mês / total. As próximas a API já cria nos meses seguintes. */
+  installmentNumber?: number | null;
+  installmentTotal?: number | null;
+  installmentGroupId?: string | null;
+  /** Para quem se deve (opcional). */
+  creditorName?: string | null;
+  creditorPixKey?: string | null;
   createdAt?: string;
 }
 
@@ -57,6 +67,52 @@ export interface DebtInput {
   status?: DebtStatus;
   targetMonth: string;
   dueDate?: string | null;
+  /** Só na criação. */
+  installmentNumber?: number | null;
+  installmentTotal?: number | null;
+  creditorName?: string | null;
+  creditorPixKey?: string | null;
+}
+
+/**
+ * Assinatura mensal recorrente.
+ * - individual: só o assinante vê
+ * - family: cobrada de todos da casa (entra no rateio, paga pelo assinante)
+ */
+export type SubscriptionType = "individual" | "family";
+
+export interface Subscription {
+  id: string;
+  houseId: string;
+  ownerMemberId: string;
+  ownerMember?: MemberRef | null;
+  title: string;
+  amount: number | string;
+  type: SubscriptionType;
+  /** Em quantas pessoas é dividida, contando o assinante. */
+  splitCount: number;
+  billingDay: number;
+  startMonth: string;
+  endMonth: string | null;
+  createdAt?: string;
+}
+
+/** Assinatura como vem na lista de um mês (GET /subscriptions?month=). */
+export interface MonthSubscription extends Subscription {
+  billingMonth: string;
+  dueDate: string;
+  shareAmount: number;
+  paid: boolean;
+}
+
+export interface SubscriptionInput {
+  title: string;
+  amount: number;
+  type: SubscriptionType;
+  splitCount: number;
+  billingDay: number;
+  startMonth: string;
+  endMonth?: string | null;
 }
 
 export interface Supply {

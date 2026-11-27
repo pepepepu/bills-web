@@ -66,8 +66,9 @@ export const todayISODate = () => {
 };
 
 /**
- * Parcelas: a API não tem campo próprio, então guardamos no título
- * como "Parcela Ana Karla [2/4]".
+ * Parcelas antigas: antes a API não tinha campo próprio e o número ficava no
+ * título ("Parcela Ana Karla [2/4]"). Hoje vem em installmentNumber/Total;
+ * use debtInstallment() que entende os dois jeitos.
  */
 const INSTALLMENT_RE = /\s*\[(\d+)\/(\d+)\]/;
 
@@ -86,3 +87,25 @@ export const joinInstallment = (
   current?: number | null,
   total?: number | null,
 ) => (current && total ? `${name.trim()} [${current}/${total}]` : name.trim());
+
+/** Parcela de uma dívida: campos da API ou, em dívidas antigas, o título. */
+export const debtInstallment = (d: {
+  title: string;
+  installmentNumber?: number | null;
+  installmentTotal?: number | null;
+}) => {
+  if (d.installmentNumber && d.installmentTotal)
+    return {
+      name: d.title,
+      current: d.installmentNumber,
+      total: d.installmentTotal,
+      legacy: false,
+    };
+  return { ...splitInstallment(d.title), legacy: true };
+};
+
+/** "2026-11" -> "Nov/26" */
+export const shortMonthLabel = (month: string) => {
+  const [y, m] = month.split("-").map(Number);
+  return `${MONTHS[m - 1].slice(0, 3)}/${String(y).slice(2)}`;
+};

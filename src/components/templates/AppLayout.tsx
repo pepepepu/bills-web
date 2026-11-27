@@ -1,13 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { SignOut } from "@phosphor-icons/react";
+import { ArrowDown, SignOut } from "@phosphor-icons/react";
 import billsLogo from "../../assets/logos/bills-logo.svg";
 import { useAuth } from "../../hooks/useAuth";
 import { useMonth } from "../../hooks/useMonth";
+import {
+  PULL_TRIGGER,
+  usePullToRefresh,
+} from "../../hooks/usePullToRefresh";
 import { fadeUp } from "../../styles/animations";
 import { Image } from "../atoms";
-import { BottomNav, IconButton, MonthSwitcher } from "../molecules";
+import { BottomNav, IconButton, MonthSwitcher, Spinner } from "../molecules";
 
 /** Altura travada em 100dvh: só o conteúdo do meio rola. */
 const Page = styled.div`
@@ -59,6 +63,36 @@ const Scroll = styled.main`
   -webkit-overflow-scrolling: touch;
 `;
 
+/** Área que desce junto com o dedo no "puxar para atualizar". */
+const Pullable = styled.div<{ $dragging: boolean }>`
+  position: relative;
+  transition: ${({ $dragging, theme }) =>
+    $dragging ? "none" : `transform 0.45s ${theme.motion.spring}`};
+`;
+
+const PullIndicator = styled.div<{ $ready: boolean }>`
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 36px;
+  height: 36px;
+  margin-left: -18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: ${({ theme }) => theme.colors.glassStrong};
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  color: ${({ theme, $ready }) =>
+    $ready ? theme.colors.primary : theme.colors.text.secondary};
+
+  svg {
+    font-size: 1.1rem;
+    transition: transform 0.25s ${({ theme }) => theme.motion.spring};
+    transform: rotate(${({ $ready }) => ($ready ? 180 : 0)}deg);
+  }
+`;
+
 const Content = styled.div`
   max-width: 560px;
   margin: 0 auto;
@@ -95,15 +129,18 @@ const Title = styled.h1`
 interface AppLayoutProps {
   title: string;
   action?: React.ReactNode;
+  /** Puxar para baixo no topo da tela chama esta função. */
+  onRefresh?: () => Promise<unknown> | unknown;
   children: React.ReactNode;
 }
 
-const AppLayout = ({ title, action, children }: AppLayoutProps) => {
+const AppLayout = ({ title, action, onRefresh, children }: AppLayoutProps) => {
   const { logout } = useAuth();
   const { month } = useMonth();
   const { pathname } = useLocation();
   const scrollRef = useRef<HTMLElement>(null);
   const [scrolled, setScrolled] = useState(false);
+  const { pull, refreshing, dragging } = usePullToRefresh(scrollRef, onRefresh);
 
   // Token vencido (API respondeu 401): volta para o login.
   useEffect(() => {
@@ -140,13 +177,34 @@ const AppLayout = ({ title, action, children }: AppLayoutProps) => {
         ref={scrollRef}
         onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 4)}
       >
-        <Content key={`${pathname}-${month}`}>
-          <TitleRow>
-            <Title>{title}</Title>
-            {action}
-          </TitleRow>
-          {children}
-        </Content>
+        <Pullable
+          $dragging={dragging}
+          style={{ transform: pull ? `translateY(${pull}px)` : undefined }}
+        >
+          {(pull > 0 || refreshing) && (
+            <PullIndicator
+              $ready={pull >= PULL_TRIGGER}
+              style={{
+                top: -44,
+                opacity: refreshing ? 1 : Math.min(1, pull / PULL_TRIGGER),
+              }}
+              aria-hidden={!refreshing}
+            >
+              {refreshing ? (
+                <Spinner size={20} label="Atualizando" />
+              ) : (
+                <ArrowDown weight="bold" />
+              )}
+            </PullIndicator>
+          )}
+          <Content key={`${pathname}-${month}`}>
+            <TitleRow>
+              <Title>{title}</Title>
+              {action}
+            </TitleRow>
+            {children}
+          </Content>
+        </Pullable>
       </Scroll>
 
       <BottomNav />

@@ -6,6 +6,7 @@ import {
   CalendarPlus,
   Check,
   Clock,
+  Copy,
   HandCoins,
   LockSimple,
   Plus,
@@ -27,6 +28,7 @@ import {
   ErrorBanner,
   Field,
   Form,
+  IconButton,
   ItemMain,
   ItemTitle,
   InfoBanner,
@@ -41,6 +43,7 @@ import {
   Stat,
   SwipeRow,
   TextInput,
+  TodayCard,
   TotalsGrid,
   TotalsSkeleton,
 } from "../../components";
@@ -58,6 +61,7 @@ import {
 } from "../../services/debtServices";
 import {
   dateInputToISO,
+  debtInstallment,
   formatBRL,
   formatDay,
   isoToDateInput,
@@ -65,7 +69,8 @@ import {
   monthLabel,
   parseMoney,
   shiftMonth,
-  splitInstallment,
+  shortMonthLabel,
+  todayISODate,
   toNumber,
 } from "../../utils/format";
 import {
@@ -84,6 +89,21 @@ type Draft = {
   dueDate: string;
   type: DebtType;
   status: DebtStatus;
+  creditorName: string;
+  creditorPixKey: string;
+};
+
+/** Copia a chave Pix e avisa. */
+const copyPix = async (
+  key: string,
+  toast: { success: (m: string) => void; error: (m: string) => void },
+) => {
+  try {
+    await navigator.clipboard.writeText(key);
+    toast.success("Chave Pix copiada");
+  } catch {
+    toast.error("Não deu pra copiar. Segure a chave para copiar.");
+  }
 };
 
 const Debts = () => {
@@ -135,12 +155,14 @@ const Debts = () => {
     dueDate: "",
     type: tab,
     status: "open",
+    creditorName: "",
+    creditorPixKey: "",
   });
 
   useCreateParam(() => setDraft(newDraft()));
 
   const openEdit = (d: Debt) => {
-    const inst = splitInstallment(d.title);
+    const inst = debtInstallment(d);
     setPostponeTo("");
     setDraft({
       id: d.id,
@@ -151,6 +173,8 @@ const Debts = () => {
       dueDate: isoToDateInput(d.dueDate),
       type: d.type,
       status: d.status,
+      creditorName: d.creditorName ?? "",
+      creditorPixKey: d.creditorPixKey ?? "",
     });
   };
 
@@ -159,18 +183,35 @@ const Debts = () => {
       () => updateDebt(d.id, { status: isDebtPaid(d) ? "open" : "paid" }),
       isDebtPaid(d)
         ? "Voltou para em aberto"
-        : `${splitInstallment(d.title).name} paga`,
+        : `${debtInstallment(d).name} paga`,
     );
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!draft) return;
+    const current = Number(draft.current) || null;
+    const totalInst = Number(draft.total) || null;
+    if ((current === null) !== (totalInst === null)) {
+      toast.error("Preencha a parcela atual e o total de parcelas.");
+      return;
+    }
+    if (current && totalInst && current > totalInst) {
+      toast.error("A parcela atual não pode ser maior que o total.");
+      return;
+    }
+    const editingDebt = draft.id ? all.find((d) => d.id === draft.id) : undefined;
+    // Dívidas antigas guardam a parcela no título; as novas, em campos próprios.
+    const legacyTitle =
+      editingDebt && debtInstallment(editingDebt).legacy && current;
     const payload = {
-      title: joinInstallment(
-        draft.name,
-        Number(draft.current) || null,
-        Number(draft.total) || null,
-      ),
+      title: legacyTitle
+        ? joinInstallment(draft.name, current, totalInst)
+        : draft.name.trim(),
+      ...(draft.id
+        ? {}
+        : { installmentNumber: current, installmentTotal: totalInst }),
+      creditorName: draft.creditorName.trim() || null,
+      creditorPixKey: draft.creditorPixKey.trim() || null,
       amount: parseMoney(draft.amount),
       type: draft.type,
       // a API sempre grava a dívida pessoal no nome de quem está logado
@@ -179,9 +220,14 @@ const Debts = () => {
       status: draft.status,
       targetMonth: month,
     };
+    const remaining = current && totalInst ? totalInst - current : 0;
     const ok = await run(
       () => (draft.id ? updateDebt(draft.id, payload) : createDebt(payload)),
-      draft.id ? "Dívida atualizada" : "Dívida adicionada",
+      draft.id
+        ? "Dívida atualizada"
+        : remaining > 0
+          ? `Dívida adicionada até ${monthLabel(shiftMonth(month, remaining))}`
+          : "Dívida adicionada",
     );
     if (ok) setDraft(null);
   };
@@ -204,9 +250,12 @@ const Debts = () => {
       setDraft(null);
   };
 
-  /** Lança a próxima parcela (n+1/total) no mês seguinte. */
+  /**
+   * Só para dívidas antigas (parcela no título): lança a próxima parcela no
+   * mês seguinte. As novas já vêm criadas pela API.
+   */
   const nextInstallment = async (d: Debt) => {
-    const inst = splitInstallment(d.title);
+    const inst = debtInstallment(d);
     if (!inst.current || !inst.total || inst.current >= inst.total) return;
     let due: string | null = null;
     if (d.dueDate) {
@@ -229,10 +278,41 @@ const Debts = () => {
   };
 
   const editing = draft?.id ? all.find((d) => d.id === draft.id) : undefined;
-  const editingInst = editing ? splitInstallment(editing.title) : null;
+  const editingInst = editing ? debtInstallment(editing) : null;
+  /** Parcelas seguintes já lançadas (dívidas novas). */
+  const hasFollowing =
+    !!editingInst &&
+    !editingInst.legacy &&
+    !!editingInst.current &&
+    !!editingInst.total &&
+    editingInst.current < editingInst.total;
+  const lastMonth =
+    hasFollowing && editing && editingInst?.current && editingInst.total
+      ? shiftMonth(
+          editing.targetMonth,
+          editingInst.total - editingInst.current,
+        )
+      : null;
+
+  const today = todayISODate();
+  /** Vence hoje em qualquer aba (da casa ou pessoal). */
+  const dueToday = all
+    .filter(
+      (d) =>
+        isDebtActive(d) && !isDebtPaid(d) && d.dueDate?.slice(0, 10) === today,
+    )
+    .map((d) => ({
+      id: d.id,
+      kind: "debt" as const,
+      title: debtInstallment(d).name,
+      amount: toNumber(d.amount),
+      onOpen: () => openEdit(d),
+      onPay: () => toggle(d),
+    }));
 
   return (
     <AppLayout
+      onRefresh={reload}
       title="Dívidas"
       action={
         <PillButton $small onClick={() => setDraft(newDraft())}>
@@ -240,6 +320,8 @@ const Debts = () => {
         </PillButton>
       }
     >
+      <TodayCard items={dueToday} />
+
       <Chips>
         <Chip $active={tab === "family"} onClick={() => setTab("family")}>
           Da casa
@@ -304,7 +386,7 @@ const Debts = () => {
           <List>
             {items.map((d) => {
               const paid = isDebtPaid(d);
-              const inst = splitInstallment(d.title);
+              const inst = debtInstallment(d);
               const moved = d.status === "rolled_over";
               return (
                 <SwipeRow
@@ -332,6 +414,7 @@ const Debts = () => {
                         </Badge>
                       )}
                       {d.dueDate && <Muted>{formatDay(d.dueDate)}</Muted>}
+                      {d.creditorName && <Muted>para {d.creditorName}</Muted>}
                       {d.status !== "open" && (
                         <Badge $tone={debtStatusTone(d.status)}>
                           {debtStatusLabel[d.status]}
@@ -339,6 +422,15 @@ const Debts = () => {
                       )}
                     </Row>
                   </ItemMain>
+                  {d.creditorPixKey && (
+                    <IconButton
+                      type="button"
+                      aria-label={`Copiar chave Pix de ${d.creditorName || "quem recebe"}`}
+                      onClick={() => copyPix(d.creditorPixKey as string, toast)}
+                    >
+                      <Copy weight="bold" />
+                    </IconButton>
+                  )}
                   <Amount>{formatBRL(d.amount)}</Amount>
                 </SwipeRow>
               );
@@ -359,7 +451,7 @@ const Debts = () => {
               <TextInput
                 required
                 minLength={2}
-                placeholder="Ex: Parcela Ana Karla"
+                placeholder="Ex: Empréstimo da Ana"
                 value={draft.name}
                 onChange={(e) => setDraft({ ...draft, name: e.target.value })}
               />
@@ -383,30 +475,102 @@ const Debts = () => {
                 />
               </Field>
             </Row>
-            <Row $gap="0.75rem">
-              <Field>
-                Parcela atual
+            {draft.id && editingInst && !editingInst.legacy ? (
+              editingInst.current && (
+                <Muted>
+                  Parcela {editingInst.current}/{editingInst.total}
+                  {lastMonth && ` · vai até ${shortMonthLabel(lastMonth)}`}
+                  {hasFollowing &&
+                    ". Mudanças na descrição, valor e Pix valem para as próximas parcelas em aberto."}
+                </Muted>
+              )
+            ) : (
+              <>
+                <Row $gap="0.75rem">
+                  <Field>
+                    Parcela atual
+                    <TextInput
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      placeholder="-"
+                      value={draft.current}
+                      onChange={(e) =>
+                        setDraft({ ...draft, current: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field>
+                    Total de parcelas
+                    <TextInput
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      placeholder="-"
+                      value={draft.total}
+                      onChange={(e) =>
+                        setDraft({ ...draft, total: e.target.value })
+                      }
+                    />
+                  </Field>
+                </Row>
+                {!draft.id &&
+                  Number(draft.current) > 0 &&
+                  Number(draft.total) > Number(draft.current) && (
+                    <Muted>
+                      As parcelas {Number(draft.current) + 1} a {draft.total} já
+                      entram nos próximos meses, até{" "}
+                      {monthLabel(
+                        shiftMonth(
+                          month,
+                          Number(draft.total) - Number(draft.current),
+                        ),
+                      )}
+                      .
+                    </Muted>
+                  )}
+              </>
+            )}
+            <Field>
+              Para quem (opcional)
+              <TextInput
+                placeholder="Ex: Ana Karla"
+                maxLength={120}
+                value={draft.creditorName}
+                onChange={(e) =>
+                  setDraft({ ...draft, creditorName: e.target.value })
+                }
+              />
+            </Field>
+            <Field>
+              Chave Pix (opcional)
+              <Row $gap="0.5rem">
                 <TextInput
-                  type="number"
-                  min={1}
-                  placeholder="-"
-                  value={draft.current}
+                  placeholder="CPF, e-mail, celular ou aleatória"
+                  maxLength={140}
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  style={{ flex: 1, minWidth: 0 }}
+                  value={draft.creditorPixKey}
                   onChange={(e) =>
-                    setDraft({ ...draft, current: e.target.value })
+                    setDraft({ ...draft, creditorPixKey: e.target.value })
                   }
                 />
-              </Field>
-              <Field>
-                Total de parcelas
-                <TextInput
-                  type="number"
-                  min={1}
-                  placeholder="-"
-                  value={draft.total}
-                  onChange={(e) => setDraft({ ...draft, total: e.target.value })}
-                />
-              </Field>
-            </Row>
+                {draft.creditorPixKey.trim() && (
+                  <IconButton
+                    type="button"
+                    aria-label="Copiar chave Pix"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      copyPix(draft.creditorPixKey.trim(), toast);
+                    }}
+                  >
+                    <Copy weight="bold" />
+                  </IconButton>
+                )}
+              </Row>
+            </Field>
             <Field>
               De quem é
               <Select
@@ -479,7 +643,8 @@ const Debts = () => {
                 <ArrowBendUpRight weight="bold" /> Passar para{" "}
                 {monthLabel(shiftMonth(month, 1))}
               </PillButton>
-              {editingInst?.current &&
+              {editingInst?.legacy &&
+                editingInst.current &&
                 editingInst.total &&
                 editingInst.current < editingInst.total && (
                   <PillButton
@@ -504,12 +669,38 @@ const Debts = () => {
               type="button"
               $variant="outline"
               $full
+              disabled={saving}
               onClick={async () => {
-                if (await run(() => deleteDebt(draft.id as string), "Dívida excluída"))
+                if (
+                  await run(
+                    () => deleteDebt(draft.id as string),
+                    hasFollowing ? "Parcela excluída" : "Dívida excluída",
+                  )
+                )
                   setDraft(null);
               }}
             >
-              <Trash weight="bold" /> Excluir
+              <Trash weight="bold" />{" "}
+              {hasFollowing ? "Excluir só esta parcela" : "Excluir"}
+            </PillButton>
+          )}
+          {draft.id && hasFollowing && (
+            <PillButton
+              type="button"
+              $variant="outline"
+              $full
+              disabled={saving}
+              onClick={async () => {
+                if (
+                  await run(
+                    () => deleteDebt(draft.id as string, "following"),
+                    "Parcelas excluídas",
+                  )
+                )
+                  setDraft(null);
+              }}
+            >
+              <Trash weight="bold" /> Excluir esta e as próximas
             </PillButton>
           )}
         </Sheet>

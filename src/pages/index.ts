@@ -7,3 +7,4 @@ export { default as Bills } from "./Bills";
 export { default as Debts } from "./Debts";
 export { default as Agenda } from "./Agenda";
 export { default as Supplies } from "./Supplies";
+export { default as Subscriptions } from "./Subscriptions";

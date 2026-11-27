@@ -9,6 +9,7 @@ import {
   Incomes,
   Login,
   Register,
+  Subscriptions,
   Supplies,
 } from "../pages";
 
@@ -29,6 +30,7 @@ const privatePages = [
   { path: "/dividas", element: <Debts /> },
   { path: "/agenda", element: <Agenda /> },
   { path: "/compras", element: <Supplies /> },
+  { path: "/assinaturas", element: <Subscriptions /> },
 ];
 
 export function AppRoutes() {

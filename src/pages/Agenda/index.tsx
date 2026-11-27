@@ -7,6 +7,7 @@ import {
   Clock,
   HandCoins,
   Receipt,
+  Repeat,
   Wallet,
 } from "@phosphor-icons/react";
 import {
@@ -30,12 +31,13 @@ import { useAsync } from "../../hooks/useAsync";
 import { useMonth } from "../../hooks/useMonth";
 import { listDebts } from "../../services/debtServices";
 import { listExpenses } from "../../services/expenseServices";
+import { listSubscriptions } from "../../services/subscriptionServices";
 import { fadeUp } from "../../styles/animations";
 import { squircleMask } from "../../styles/squircle";
 import {
+  debtInstallment,
   formatBRL,
   parseMoney,
-  splitInstallment,
   todayISODate,
   toNumber,
 } from "../../utils/format";
@@ -43,7 +45,7 @@ import { isDebtActive, isDebtPaid, isExpensePaid } from "../../utils/status";
 
 export interface AgendaEntry {
   id: string;
-  kind: "expense" | "debt";
+  kind: "expense" | "debt" | "subscription";
   title: string;
   amount: number;
   day: string | null; // "2026-11-10"
@@ -51,11 +53,12 @@ export interface AgendaEntry {
   postponed: boolean;
 }
 
-/** Junta contas e dívidas do mês num formato só, para agrupar por dia. */
+/** Junta contas, dívidas e assinaturas do mês num formato só, para agrupar por dia. */
 export async function loadAgenda(month: string): Promise<AgendaEntry[]> {
-  const [expenses, debts] = await Promise.all([
+  const [expenses, debts, subscriptions] = await Promise.all([
     listExpenses(month),
     listDebts(month),
+    listSubscriptions(month),
   ]);
   return [
     ...expenses.map((e) => ({
@@ -70,11 +73,20 @@ export async function loadAgenda(month: string): Promise<AgendaEntry[]> {
     ...debts.filter(isDebtActive).map((d) => ({
       id: d.id,
       kind: "debt" as const,
-      title: splitInstallment(d.title).name,
+      title: debtInstallment(d).name,
       amount: toNumber(d.amount),
       day: d.dueDate ? d.dueDate.slice(0, 10) : null,
       paid: isDebtPaid(d),
       postponed: d.status === "postponed",
+    })),
+    ...subscriptions.map((s) => ({
+      id: s.id,
+      kind: "subscription" as const,
+      title: s.title,
+      amount: toNumber(s.amount),
+      day: s.dueDate.slice(0, 10),
+      paid: s.paid,
+      postponed: false,
     })),
   ];
 }
@@ -262,9 +274,17 @@ const Entry = styled.div<{ $paid: boolean; $kind: AgendaEntry["kind"] }>`
     font-size: 0.8rem;
     flex-shrink: 0;
     color: ${({ $kind, theme }) =>
-      $kind === "expense" ? theme.colors.info : theme.colors.purple};
+      $kind === "expense"
+        ? theme.colors.info
+        : $kind === "subscription"
+          ? theme.colors.teal
+          : theme.colors.purple};
     background: ${({ $kind, theme }) =>
-      $kind === "expense" ? theme.colors.infoLight : theme.colors.purpleLight};
+      $kind === "expense"
+        ? theme.colors.infoLight
+        : $kind === "subscription"
+          ? theme.colors.tealLight
+          : theme.colors.purpleLight};
   }
 
   .title {
@@ -294,7 +314,10 @@ const weekday = (day: string) =>
 const Agenda = () => {
   const theme = useTheme();
   const { month } = useMonth();
-  const { data, loading, error } = useAsync(() => loadAgenda(month), [month]);
+  const { data, loading, error, reload } = useAsync(
+    () => loadAgenda(month),
+    [month],
+  );
   const [have, setHave] = useState("");
 
   useEffect(() => {
@@ -339,7 +362,7 @@ const Agenda = () => {
   };
 
   return (
-    <AppLayout title="Agenda">
+    <AppLayout title="Agenda" onRefresh={reload}>
       {loading && !data ? (
         <TotalsSkeleton count={2} />
       ) : (
@@ -434,6 +457,8 @@ const Agenda = () => {
                         <span className="icon">
                           {e.kind === "expense" ? (
                             <Receipt weight="fill" />
+                          ) : e.kind === "subscription" ? (
+                            <Repeat weight="fill" />
                           ) : (
                             <HandCoins weight="fill" />
                           )}
