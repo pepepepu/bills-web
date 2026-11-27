@@ -33,6 +33,7 @@ import {
   Row,
   Segmented,
   SegmentButton,
+  Select,
   Sheet,
   Stat,
   SwipeRow,
@@ -68,6 +69,10 @@ import {
 } from "../../utils/format";
 
 type Filter = "all" | "family" | "individual";
+
+/** `count` meses seguidos a partir de `from` ("2026-11", "2026-12", ...). */
+const monthOptions = (from: string, count: number) =>
+  Array.from({ length: count }, (_, i) => shiftMonth(from, i));
 
 type Draft = {
   id?: string;
@@ -417,25 +422,50 @@ const Subscriptions = () => {
             <Row $gap="0.75rem">
               <Field>
                 Começa em
-                <TextInput
-                  type="month"
+                <Select
                   required
                   value={draft.startMonth}
-                  onChange={(e) =>
-                    setDraft({ ...draft, startMonth: e.target.value })
-                  }
-                />
+                  onChange={(e) => {
+                    const startMonth = e.target.value;
+                    setDraft({
+                      ...draft,
+                      startMonth,
+                      // prazo antes do início não faz sentido
+                      endMonth:
+                        draft.endMonth && draft.endMonth < startMonth
+                          ? ""
+                          : draft.endMonth,
+                    });
+                  }}
+                >
+                  {monthOptions(
+                    shiftMonth(
+                      draft.startMonth < month ? draft.startMonth : month,
+                      -12,
+                    ),
+                    37,
+                  ).map((m) => (
+                    <option key={m} value={m}>
+                      {shortMonthLabel(m)}
+                    </option>
+                  ))}
+                </Select>
               </Field>
               <Field>
                 Prazo (opcional)
-                <TextInput
-                  type="month"
-                  min={draft.startMonth}
+                <Select
                   value={draft.endMonth}
                   onChange={(e) =>
                     setDraft({ ...draft, endMonth: e.target.value })
                   }
-                />
+                >
+                  <option value="">Sem prazo</option>
+                  {monthOptions(draft.startMonth, 61).map((m) => (
+                    <option key={m} value={m}>
+                      {shortMonthLabel(m)}
+                    </option>
+                  ))}
+                </Select>
               </Field>
             </Row>
             <Row $gap="0.5rem">
@@ -452,16 +482,6 @@ const Subscriptions = () => {
               >
                 <CalendarCheck weight="bold" /> Plano anual (12 meses)
               </PillButton>
-              {draft.endMonth && (
-                <PillButton
-                  type="button"
-                  $variant="ghost"
-                  $small
-                  onClick={() => setDraft({ ...draft, endMonth: "" })}
-                >
-                  Sem prazo
-                </PillButton>
-              )}
             </Row>
             <Muted>
               {draft.endMonth
